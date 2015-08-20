@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+  </head>
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">Erickson Code Review</a>
+      </div>
+    </div>
+    </nav>
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="jumbotron">
+      <div class="container">
+        <h2>Reviews</h2>
+        <table class="table table-hover">
+          <thead>
+            <th>Review</th>
+            <th>Submitter</th>
+            <th>Submitted At</th>
+            <th>Status</th>
+            <th>Repository</th>
+          </thead>
+          <tbody>
+            {{range $i, $v := .Reviews}}
+            <tr>
+              <td><a href="{{$v.URL}}"><span class="label label-primary">Review {{$v.ID}}</span></a></td>
+              <td>{{$v.Submitter}}</td>
+              <td>{{$v.SubmittedAt}}</td>
+              <td>{{$v.Status}}</td>
+              <td>{{$v.Repository}}</td>
+            </tr>
+            {{end}}
+          <tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>
