@@ -198,9 +198,9 @@ func TestCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if annotations := mr2.Revisions[0].Annotations; len(annotations) != 1 {
+	if annotations := mr2.Revisions[0].Annotations; len(annotations) != 2 {
 		t.Errorf("wrong number of annotations: got %d, want %d", len(annotations), 1)
-	} else if annotations[0] != anno {
+	} else if annotations[1] != anno {
 		t.Errorf("wrong annotation: got %+v, want %+v", annotations[0], anno)
 	}
 
