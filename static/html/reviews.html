@@ -27,6 +27,7 @@
       <div id="navbar" class="navbar-collapse collapse">
         <div class="navbar-form navbar-right">
           <button onClick="createReview()" class="btn btn-primary">Create Review</button>
+          <button onClick="cancelReview()" class="btn btn-danger hidden" id="cancel-button">Cancel</button>
         </div>
       </div>
     </div>
@@ -34,19 +35,22 @@
     <div class="jumbotron">
       <div class="container create-review hidden" id="create-review">
         <h3>Create a new review by uploading a diff. It's easy!</h3>
-        <form>
+        <form method="post" action="/reviews">
           <div class="form-group">
-            <label for="diff">Diff File</label>
-            <div class="input-group" style="width: 50%;">
-              <input type="text" class="form-control" placeholder="A unified diff...">
-              <span class="input-group-btn">
-                <button class="btn btn-default" type="button">Choose</button>
-              </span>
-            </div>
+            <label for="diff">Paste a diff</label>
+            <textarea class="form-control" name="diff" id="diff" rows="10"></textarea>
           </div>
+          <div class="form-group">
+            <label for="diff-file">Or choose a file</label>
+            <input class="form-control" type="file" onchange="pasteFile(this.files[0])">
+          </div>
+          <div class="form-group">
+            <label>Tell me a bit about the review, and yourself</label>
+            <input class="form-control" type="text" name="description" placeholder="Description">
+            <input class="form-control" type="text" name="username" placeholder="User Name">
+          </div>
+          <button type="submit" onClick="submitReview()" class="btn btn-success">Submit</button> 
         </form>
-        <button onClick="cancelReview()" class="btn btn-danger">Cancel</button>
-        <button onClick="submitReview()" class="btn btn-success">Submit</button> 
       </div>
       <div class="container">
         <h2>Reviews</h2>
