@@ -3,7 +3,7 @@ package server
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"html"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -66,7 +66,12 @@ func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
 	diff := make([]resource.DiffLine, 0, len(lhs))
 
 	for i := range lhs {
-		diff = append(diff, resource.DiffLine{LHS: lhs[i], RHS: rhs[i]})
+		diff = append(diff, resource.DiffLine{
+			// Sec: LHS and RHS MUST be HTMLEscaped or a user could
+			// inject a script into the rendered page.
+			LHS: html.EscapeString(lhs[i]),
+			RHS: html.EscapeString(rhs[i]),
+		})
 	}
 
 	res := resource.Review{
@@ -82,36 +87,38 @@ func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
 }
 
 func postReview(ctx context, w http.ResponseWriter, req *http.Request) {
-	fmt.Println("hello")
 	switch req.Header.Get("Content-Type") {
 	case "application/json":
 		postJSONReview(ctx, w, req)
-		return
 	case "application/x-www-form-urlencoded":
-		if err := req.ParseForm(); err != nil {
-			http.Error(w, "couldn't parse form", 400)
-			return
-		}
-		r := review.R{
-			Summary: review.Summary{
-				CommitMsg: req.FormValue("description"),
-				Submitter: req.FormValue("username"),
-			},
-			Revisions: []review.Revision{
-				{Patches: req.FormValue("diff")},
-			},
-		}
-		id, err := ctx.db.CreateReview(r)
-		if err != nil {
-			log.Println(err)
-			http.Error(w, "couldn't create review", 500)
-			return
-		}
-		fmt.Println(req.FormValue("diff"))
-		ctx.review = id
-		url := ctx.reviewURL()
-		http.Redirect(w, req, url, 303)
+		postFormReview(ctx, w, req)
 	}
+}
+
+func postFormReview(ctx context, w http.ResponseWriter, req *http.Request) {
+	if err := req.ParseForm(); err != nil {
+		log.Println(err)
+		http.Error(w, "couldn't parse form", 400)
+		return
+	}
+	r := review.R{
+		Summary: review.Summary{
+			CommitMsg: req.FormValue("description"),
+			Submitter: req.FormValue("username"),
+		},
+		Revisions: []review.Revision{
+			{Patches: req.FormValue("diff")},
+		},
+	}
+	id, err := ctx.db.CreateReview(r)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "couldn't create review", 500)
+		return
+	}
+	ctx.review = id
+	url := ctx.reviewURL()
+	http.Redirect(w, req, url, 303)
 }
 
 func postJSONReview(ctx context, w http.ResponseWriter, req *http.Request) {
