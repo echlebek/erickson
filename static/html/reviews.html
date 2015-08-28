@@ -7,7 +7,10 @@
     <!-- Optional theme -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
     <!-- Latest compiled and minified JavaScript -->
+    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="static/css/main.css">
+    <script src="static/js/main.js"></script>
   </head>
   <body>
     <nav class="navbar navbar-inverse navbar-fixed-top">
@@ -21,10 +24,30 @@
         </button>
         <a class="navbar-brand" href="#">Erickson Code Review</a>
       </div>
+      <div id="navbar" class="navbar-collapse collapse">
+        <div class="navbar-form navbar-right">
+          <button onClick="createReview()" class="btn btn-primary">Create Review</button>
+        </div>
+      </div>
     </div>
     </nav>
-    <!-- Main jumbotron for a primary marketing message or call to action -->
     <div class="jumbotron">
+      <div class="container create-review hidden" id="create-review">
+        <h3>Create a new review by uploading a diff. It's easy!</h3>
+        <form>
+          <div class="form-group">
+            <label for="diff">Diff File</label>
+            <div class="input-group" style="width: 50%;">
+              <input type="text" class="form-control" placeholder="A unified diff...">
+              <span class="input-group-btn">
+                <button class="btn btn-default" type="button">Choose</button>
+              </span>
+            </div>
+          </div>
+        </form>
+        <button onClick="cancelReview()" class="btn btn-danger">Cancel</button>
+        <button onClick="submitReview()" class="btn btn-success">Submit</button> 
+      </div>
       <div class="container">
         <h2>Reviews</h2>
         <table class="table table-hover">
