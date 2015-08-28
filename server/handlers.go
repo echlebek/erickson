@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"sort"
 	"text/template"
+	"time"
 
 	"github.com/echlebek/erickson/diff"
 	"github.com/echlebek/erickson/resource"
@@ -103,8 +104,10 @@ func postFormReview(ctx context, w http.ResponseWriter, req *http.Request) {
 	}
 	r := review.R{
 		Summary: review.Summary{
-			CommitMsg: req.FormValue("description"),
-			Submitter: req.FormValue("username"),
+			CommitMsg:   req.FormValue("description"),
+			Submitter:   req.FormValue("username"),
+			SubmittedAt: time.Now(),
+			Status:      review.Open,
 		},
 		Revisions: []review.Revision{
 			{Patches: req.FormValue("diff")},
@@ -132,6 +135,8 @@ func postJSONReview(ctx context, w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "no revisions provided", 400)
 		return
 	}
+	r.Summary.SubmittedAt = time.Now()
+	r.Summary.Status = review.Open
 	id, err := ctx.db.CreateReview(r)
 	if err != nil {
 		log.Println(err)
