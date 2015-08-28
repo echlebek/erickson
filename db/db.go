@@ -3,6 +3,7 @@ package db
 import (
 	"errors"
 	"fmt"
+
 	"github.com/echlebek/erickson/review"
 )
 
@@ -30,7 +31,7 @@ func (e ErrNoAnnotation) Error() string {
 type Database interface {
 	// CreateReview creates a new review. It returns the ID of the review and
 	// an error if the review could not be created.
-	CreateReview(review.Summary) (id int, err error)
+	CreateReview(review.R) (id int, err error)
 
 	// GetReview gets a review by ID.
 	GetReview(id int) (review.R, error)

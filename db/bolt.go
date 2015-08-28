@@ -99,7 +99,7 @@ func NewBoltDB(path string) (*BoltDB, error) {
 	return &boltDB, err
 }
 
-func (db *BoltDB) CreateReview(summary review.Summary) (int, error) {
+func (db *BoltDB) CreateReview(r review.R) (int, error) {
 	var (
 		err      error
 		reviewID int
@@ -122,12 +122,12 @@ func (db *BoltDB) CreateReview(summary review.Summary) (int, error) {
 		if err != nil {
 			return err
 		}
-		summary.ID = reviewID
-		meta.Summaries[strconv.Itoa(reviewID)] = summary
+		r.Summary.ID = reviewID
+		meta.Summaries[strconv.Itoa(reviewID)] = r.Summary
 		if err := setMetaData(tx, meta); err != nil {
 			return err
 		}
-		revisionsValue, err := json.Marshal([]review.Revision{})
+		revisionsValue, err := json.Marshal(r.Revisions)
 		if err != nil {
 			return err
 		}

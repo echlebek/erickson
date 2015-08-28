@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -81,6 +82,39 @@ func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
 }
 
 func postReview(ctx context, w http.ResponseWriter, req *http.Request) {
+	fmt.Println("hello")
+	switch req.Header.Get("Content-Type") {
+	case "application/json":
+		postJSONReview(ctx, w, req)
+		return
+	case "application/x-www-form-urlencoded":
+		if err := req.ParseForm(); err != nil {
+			http.Error(w, "couldn't parse form", 400)
+			return
+		}
+		r := review.R{
+			Summary: review.Summary{
+				CommitMsg: req.FormValue("description"),
+				Submitter: req.FormValue("username"),
+			},
+			Revisions: []review.Revision{
+				{Patches: req.FormValue("diff")},
+			},
+		}
+		id, err := ctx.db.CreateReview(r)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "couldn't create review", 500)
+			return
+		}
+		fmt.Println(req.FormValue("diff"))
+		ctx.review = id
+		url := ctx.reviewURL()
+		http.Redirect(w, req, url, 303)
+	}
+}
+
+func postJSONReview(ctx context, w http.ResponseWriter, req *http.Request) {
 	var r review.R
 	dec := json.NewDecoder(req.Body)
 	if err := dec.Decode(&r); err != nil {
@@ -91,19 +125,13 @@ func postReview(ctx context, w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "no revisions provided", 400)
 		return
 	}
-	id, err := ctx.db.CreateReview(r.Summary)
+	id, err := ctx.db.CreateReview(r)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "couldn't create review", 500)
 		return
 	}
 	ctx.review = id
-	for _, rev := range r.Revisions {
-		if err := ctx.db.AddRevision(id, rev); err != nil {
-			log.Println(err)
-			http.Error(w, "couldn't create review", 500)
-		}
-	}
 	url := ctx.reviewURL()
 	http.Redirect(w, req, url, 303)
 }

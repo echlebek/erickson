@@ -93,7 +93,7 @@ func TestMissingDB(t *testing.T) {
 		t.Fatal(err)
 	}
 	boltDB.DB = db
-	_, err = boltDB.CreateReview(mockReview.Summary)
+	_, err = boltDB.CreateReview(mockReview)
 	if err != ErrNoDB {
 		t.Errorf("expected ErrNoDB")
 	}
@@ -110,7 +110,7 @@ func TestCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	id, err := db.CreateReview(mockReview.Summary)
+	id, err := db.CreateReview(mockReview)
 	if err != nil {
 		t.Error(db.String())
 		t.Error(db.GoString())
@@ -119,9 +119,6 @@ func TestCRUD(t *testing.T) {
 	mockReview.Summary.ID = id
 	if exp := 1; id != exp {
 		t.Errorf("wrong review id. got %d, want %d", id, exp)
-	}
-	if err := db.AddRevision(1, mockReview.Revisions[0]); err != nil {
-		t.Fatal(err)
 	}
 
 	gotReview, err := db.GetReview(1)
@@ -135,7 +132,7 @@ func TestCRUD(t *testing.T) {
 
 	mockReview2 := mockReview
 
-	id, err = db.CreateReview(mockReview2.Summary)
+	id, err = db.CreateReview(mockReview2)
 	if err != nil {
 		t.Error(db.String())
 		t.Error(db.GoString())
@@ -188,7 +185,11 @@ func TestCRUD(t *testing.T) {
 		t.Errorf("wrong review summary: got %+v, want %+v", summaries[1], newSum)
 	}
 
-	anno := review.Annotation{0, 0, "Fitter, happier more productive"}
+	anno := review.Annotation{
+		FileNumber: 0,
+		LineNumber: 0,
+		Message:    "Fitter, happier more productive",
+	}
 	if err := db.AddAnnotation(2, 0, anno); err != nil {
 		t.Fatal(err)
 	}

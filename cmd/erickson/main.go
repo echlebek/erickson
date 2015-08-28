@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/echlebek/erickson/db"
-	"github.com/echlebek/erickson/review"
 	"github.com/echlebek/erickson/server"
 )
 
@@ -116,24 +115,6 @@ index 90e913e..c31da41 100644
  COMMIT;
 `
 
-func mock(db *db.BoltDB) {
-	reviews := []review.Summary{
-		{Submitter: "Alice", SubmittedAt: time.Now(), Repository: "Scrum", Status: review.Open},
-	}
-	for _, r := range reviews {
-		if _, err := db.CreateReview(r); err != nil {
-			panic(err)
-		}
-	}
-	rev := review.Revision{
-		Patches:     diff,
-		Annotations: []review.Annotation{},
-	}
-	if err := db.AddRevision(1, rev); err != nil {
-		panic(err)
-	}
-}
-
 func main() {
 	db, err := db.NewBoltDB("my2.db")
 	if err != nil {
@@ -150,8 +131,6 @@ func main() {
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
-
-	//mock(db)
 
 	log.Fatal(s.ListenAndServe())
 }
