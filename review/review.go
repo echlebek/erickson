@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	Open      = "open"
-	Submitted = "submitted"
-	Discarded = "discarded"
+	Open      = "Open"
+	Submitted = "Submitted"
+	Discarded = "Discarded"
 )
 
 var (

@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"html"
 	"log"
 	"net/http"
@@ -96,6 +97,24 @@ func postReview(ctx context, w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func patchReview(ctx context, w http.ResponseWriter, req *http.Request) {
+	p := struct {
+		Status string `json:"status"`
+	}{}
+	if err := json.NewDecoder(req.Body).Decode(&p); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	review, err := ctx.db.GetReview(ctx.review)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("review %d not found", ctx.review), http.StatusNotFound)
+		return
+	}
+	review.Summary.Status = p.Status
+	ctx.db.SetSummary(ctx.review, review.Summary)
+	http.Redirect(w, req, "/", 303)
+}
+
 func postFormReview(ctx context, w http.ResponseWriter, req *http.Request) {
 	if err := req.ParseForm(); err != nil {
 		log.Println(err)
@@ -104,8 +123,9 @@ func postFormReview(ctx context, w http.ResponseWriter, req *http.Request) {
 	}
 	r := review.R{
 		Summary: review.Summary{
-			CommitMsg:   req.FormValue("description"),
+			CommitMsg:   req.FormValue("commitmsg"),
 			Submitter:   req.FormValue("username"),
+			Repository:  req.FormValue("repository"),
 			SubmittedAt: time.Now(),
 			Status:      review.Open,
 		},

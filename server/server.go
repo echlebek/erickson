@@ -63,7 +63,7 @@ func (c context) revisionURL(id, revision int) (str string) {
 //
 // / GET
 // /reviews GET, POST
-// /reviews/{id} GET, DELETE
+// /reviews/{id} GET, PATCH, DELETE
 // /reviews/{id}/rev POST
 // /reviews/{id}/rev/{revision} GET, PATCH
 //
@@ -87,6 +87,9 @@ func NewRootHandler(d db.Database, fsRoot string) *RootHandler {
 
 	r.HandleFunc("/reviews/{id}", ctx.handler(deleteReview)).
 		Methods("DELETE")
+
+	r.HandleFunc("/reviews/{id}", ctx.handler(patchReview)).
+		Methods("PATCH")
 
 	r.HandleFunc("/reviews/{id}/rev/{revision}", ctx.handler(getReview)).
 		Name("revision").

@@ -1,6 +1,8 @@
 package resource
 
 import (
+	"time"
+
 	"github.com/echlebek/erickson/review"
 )
 
@@ -22,6 +24,27 @@ type Review struct {
 	SelectedRevision int
 	Diff             []DiffLine
 	URL              string
+}
+
+// CSS label class will be rendered according to the status
+func (r ReviewSummary) StatusLabel() string {
+	switch r.Status {
+	case review.Open:
+		return "label-primary"
+	case review.Submitted:
+		return "label-success"
+	case review.Discarded:
+		return "label-danger"
+	}
+	return "label-default"
+}
+
+func (r Review) StatusOpen() bool {
+	return r.Status == review.Open
+}
+
+func (r ReviewSummary) SubmittedAt() string {
+	return r.Summary.SubmittedAt.Format(time.UnixDate)
 }
 
 type DiffLine struct {
@@ -59,7 +82,7 @@ func (d DiffLine) RHSColour() string {
 type SummaryBySubmitTime []ReviewSummary
 
 func (s SummaryBySubmitTime) Less(i, j int) bool {
-	return s[i].SubmittedAt.After(s[j].SubmittedAt)
+	return s[i].Summary.SubmittedAt.After(s[j].Summary.SubmittedAt)
 }
 
 func (s SummaryBySubmitTime) Swap(i, j int) {

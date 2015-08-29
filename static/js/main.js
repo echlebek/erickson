@@ -9,6 +9,22 @@ function cancelReview() {
 }
 
 function submitReview() {
+  patchReview("Submitted");
+}
+
+function discardReview() {
+  patchReview("Discarded");
+}
+
+function patchReview(status) {
+  $.ajax({
+    headers: {
+      "Content-Type": "application/json"
+    },
+    url: window.location,
+    type: "PATCH",
+    data: JSON.stringify({status: status})
+  });
 }
 
 function pasteFile(file) {
