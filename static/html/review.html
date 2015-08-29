@@ -38,6 +38,8 @@
           {{ if .StatusOpen }}
             <button onClick="submitReview()" class="btn btn-success">Submit Review</button>
             <button onClick="discardReview()" class="btn btn-danger">Discard Review</button>
+          {{ else }}
+            <button onClick="reopenReview()" class="btn btn-primary">Re-open Review</button>
           {{ end }}
         </div>
       </div>

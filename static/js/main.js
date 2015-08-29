@@ -16,6 +16,20 @@ function discardReview() {
   patchReview("Discarded");
 }
 
+function reopenReview() {
+  patchReview("Open");
+}
+
+function toggleShowAll() {
+  if ($("#show-all").is(":checked")) {
+    $("tr").show();
+  } else {
+    $("td > span").filter(function () {
+      return $(this).text() !== "Open";
+    }).parent().parent().hide();
+  }
+}
+
 function patchReview(status) {
   $.ajax({
     headers: {
@@ -23,7 +37,10 @@ function patchReview(status) {
     },
     url: window.location,
     type: "PATCH",
-    data: JSON.stringify({status: status})
+    data: JSON.stringify({status: status}),
+    complete: function() {
+      window.location.reload();
+    }
   });
 }
 
@@ -34,3 +51,5 @@ function pasteFile(file) {
   }
   reader.readAsText(file);
 }
+
+window.onload = toggleShowAll;

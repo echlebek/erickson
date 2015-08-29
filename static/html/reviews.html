@@ -55,6 +55,11 @@
       </div>
       <div class="container">
         <h2>Reviews</h2>
+        <div class="checkbox">
+          <label>
+            <input id="show-all" onClick="toggleShowAll()" type="checkbox" value="false">Show Submitted and Discarded Reviews</input>
+          </label>
+        </div>
         <table class="table table-hover">
           <thead>
             <th>Review</th>
@@ -69,7 +74,7 @@
               <td><a href="{{$v.URL}}"><span class="label label-primary">Review {{$v.ID}}</span></a></td>
               <td>{{$v.Submitter}}</td>
               <td>{{$v.SubmittedAt}}</td>
-              <td><span class="label {{$v.StatusLabel}}">{{$v.Status}}</span></td>
+              <td><span id="status-{{$i}}" class="label {{$v.StatusLabel}}">{{$v.Status}}</span></td>
               <td>{{$v.Repository}}</td>
             </tr>
             {{end}}
