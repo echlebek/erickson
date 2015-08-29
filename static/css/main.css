@@ -1,0 +1,10 @@
+#diff tr:hover {
+	opacity: .7;
+}
+
+#diff tr:selected {
+	opacity: .7;
+}
+
+::selection { background: transparent; }
+::-moz-selection { background: transparent; }

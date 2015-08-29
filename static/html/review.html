@@ -61,15 +61,14 @@
       </div>
     </div>
     <div class="container">
-      <table style="width: 100%; display: table;" class="table table-condensed borderless">
+      <table style="width: 100%; display: table;" class="table table-condensed borderless" id="diff">
         {{ range $i, $v := .Diff }}
         <tr style="padding: 0px; border: none">
-          <a href="#modal">
           <td style="background-color: {{$v.LHSColour}}; padding: 0px; border: none; width: 50%">
-            <a href="#modal"><pre class="code-pre"><code style="background-color: inherit;">{{$v.LHS}}</code></pre></a>
+            <pre class="code-pre"><code style="background-color: inherit;">{{$v.LHS}}</code></pre>
           </td>
           <td style="background-color: {{$v.RHSColour}}; padding: 0px; border: none; width: 50%">
-            <a href="#modal"><pre class="code-pre"><code style="background-color: inherit;">{{$v.RHS}}</code></pre></a>
+            <pre class="code-pre"><code style="background-color: inherit;">{{$v.RHS}}</code></pre>
           </td>
         </tr>
         {{ end }}
