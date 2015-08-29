@@ -63,19 +63,19 @@
         <table class="table table-hover">
           <thead>
             <th>Review</th>
+            <th>Repository</th>
             <th>Submitter</th>
             <th>Submitted At</th>
             <th>Status</th>
-            <th>Repository</th>
           </thead>
           <tbody>
             {{range $i, $v := .Reviews}}
             <tr>
               <td><a href="{{$v.URL}}"><span class="label label-primary">Review {{$v.ID}}</span></a></td>
+              <td>{{$v.Repository}}</td>
               <td>{{$v.Submitter}}</td>
               <td>{{$v.SubmittedAt}}</td>
               <td><span id="status-{{$i}}" class="label {{$v.StatusLabel}}">{{$v.Status}}</span></td>
-              <td>{{$v.Repository}}</td>
             </tr>
             {{end}}
           <tbody>
