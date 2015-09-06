@@ -1,9 +1,10 @@
 package review
 
 import (
-	"encoding/json"
 	"errors"
 	"time"
+
+	"github.com/echlebek/erickson/diff"
 )
 
 const (
@@ -33,25 +34,10 @@ type Summary struct {
 	Status      string    `json:"status"`
 }
 
-// A Revision is a patch set, stored in Patches, along with Annotations that
-// map to the files and line numbers in the patch set.
+// A revision is a set of diff.Files coupled with annotations.
 type Revision struct {
-	Patches     string       `json:"patches"`
+	Files       []diff.File  `json:"files"`
 	Annotations []Annotation `json:"annotations"`
-}
-
-func (r *Revision) UnmarshalJSON(data []byte) error {
-	// This function is implemented so that the patchSet field
-	// will be populated upon unmarshaling the data.
-	type revision Revision // avoid recursion on Unmarshal
-	var rev revision
-	var err error
-	err = json.Unmarshal(data, &rev)
-	if err != nil {
-		return err
-	}
-	*r = Revision(rev)
-	return nil
 }
 
 // An Annotation is a message that corresponds to a file and line number in a
