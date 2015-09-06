@@ -1,0 +1,937 @@
+diff --git a/README.md b/README.md
+index 08539ac..2dae58f 100644
+--- a/README.md
++++ b/README.md
+@@ -1,2 +1,20 @@
+ # erickson
+-Erickson Code Review
++Erickson is a simple code review app. Code reviews are created via
++the API methods, or the web frontend.
++
++Once a review is created, annotations can be made to the diff, and
++successive versions of the diff can be appended to the original review.
++
++Erickson is a work in progress and many features are incomplete, missing
++or broken.
++
++Project goals:
++* Dead-simple setup that doesn't require integration with other services.
++* A simple, lightweight UI that requires minimal JS.
++* A small feature-set that is robust and reliable.
++
++TODO:
++* Annotations
++* Authentication
++* TLS
++* SCM-specific tools
+diff --git a/cmd/erickson/main.go b/cmd/erickson/main.go
+index 19dc466..ff6c640 100644
+--- a/cmd/erickson/main.go
++++ b/cmd/erickson/main.go
+@@ -6,7 +6,6 @@ import (
+ 	"time"
+ 
+ 	"github.com/echlebek/erickson/db"
+-	"github.com/echlebek/erickson/review"
+ 	"github.com/echlebek/erickson/server"
+ )
+ 
+@@ -116,24 +115,6 @@ index 90e913e..c31da41 100644
+  COMMIT;
+ `
+ 
+-func mock(db *db.BoltDB) {
+-	reviews := []review.Summary{
+-		{Submitter: "Alice", SubmittedAt: time.Now(), Repository: "Scrum", Status: review.Open},
+-	}
+-	for _, r := range reviews {
+-		if _, err := db.CreateReview(r); err != nil {
+-			panic(err)
+-		}
+-	}
+-	rev := review.Revision{
+-		Patches:     diff,
+-		Annotations: []review.Annotation{},
+-	}
+-	if err := db.AddRevision(1, rev); err != nil {
+-		panic(err)
+-	}
+-}
+-
+ func main() {
+ 	db, err := db.NewBoltDB("my2.db")
+ 	if err != nil {
+@@ -151,7 +132,5 @@ func main() {
+ 		MaxHeaderBytes: 1 << 20,
+ 	}
+ 
+-	//mock(db)
+-
+ 	log.Fatal(s.ListenAndServe())
+ }
+diff --git a/db/bolt.go b/db/bolt.go
+index e221d25..22b83fe 100644
+--- a/db/bolt.go
++++ b/db/bolt.go
+@@ -99,7 +99,7 @@ func NewBoltDB(path string) (*BoltDB, error) {
+ 	return &boltDB, err
+ }
+ 
+-func (db *BoltDB) CreateReview(summary review.Summary) (int, error) {
++func (db *BoltDB) CreateReview(r review.R) (int, error) {
+ 	var (
+ 		err      error
+ 		reviewID int
+@@ -122,12 +122,12 @@ func (db *BoltDB) CreateReview(summary review.Summary) (int, error) {
+ 		if err != nil {
+ 			return err
+ 		}
+-		summary.ID = reviewID
+-		meta.Summaries[strconv.Itoa(reviewID)] = summary
++		r.Summary.ID = reviewID
++		meta.Summaries[strconv.Itoa(reviewID)] = r.Summary
+ 		if err := setMetaData(tx, meta); err != nil {
+ 			return err
+ 		}
+-		revisionsValue, err := json.Marshal([]review.Revision{})
++		revisionsValue, err := json.Marshal(r.Revisions)
+ 		if err != nil {
+ 			return err
+ 		}
+diff --git a/db/bolt_test.go b/db/bolt_test.go
+index eedc923..2e710d4 100644
+--- a/db/bolt_test.go
++++ b/db/bolt_test.go
+@@ -93,7 +93,7 @@ func TestMissingDB(t *testing.T) {
+ 		t.Fatal(err)
+ 	}
+ 	boltDB.DB = db
+-	_, err = boltDB.CreateReview(mockReview.Summary)
++	_, err = boltDB.CreateReview(mockReview)
+ 	if err != ErrNoDB {
+ 		t.Errorf("expected ErrNoDB")
+ 	}
+@@ -110,7 +110,7 @@ func TestCRUD(t *testing.T) {
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+-	id, err := db.CreateReview(mockReview.Summary)
++	id, err := db.CreateReview(mockReview)
+ 	if err != nil {
+ 		t.Error(db.String())
+ 		t.Error(db.GoString())
+@@ -120,9 +120,6 @@ func TestCRUD(t *testing.T) {
+ 	if exp := 1; id != exp {
+ 		t.Errorf("wrong review id. got %d, want %d", id, exp)
+ 	}
+-	if err := db.AddRevision(1, mockReview.Revisions[0]); err != nil {
+-		t.Fatal(err)
+-	}
+ 
+ 	gotReview, err := db.GetReview(1)
+ 	if err != nil {
+@@ -135,7 +132,7 @@ func TestCRUD(t *testing.T) {
+ 
+ 	mockReview2 := mockReview
+ 
+-	id, err = db.CreateReview(mockReview2.Summary)
++	id, err = db.CreateReview(mockReview2)
+ 	if err != nil {
+ 		t.Error(db.String())
+ 		t.Error(db.GoString())
+@@ -188,7 +185,11 @@ func TestCRUD(t *testing.T) {
+ 		t.Errorf("wrong review summary: got %+v, want %+v", summaries[1], newSum)
+ 	}
+ 
+-	anno := review.Annotation{0, 0, "Fitter, happier more productive"}
++	anno := review.Annotation{
++		FileNumber: 0,
++		LineNumber: 0,
++		Message:    "Fitter, happier more productive",
++	}
+ 	if err := db.AddAnnotation(2, 0, anno); err != nil {
+ 		t.Fatal(err)
+ 	}
+@@ -197,9 +198,9 @@ func TestCRUD(t *testing.T) {
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if annotations := mr2.Revisions[0].Annotations; len(annotations) != 1 {
++	if annotations := mr2.Revisions[0].Annotations; len(annotations) != 2 {
+ 		t.Errorf("wrong number of annotations: got %d, want %d", len(annotations), 1)
+-	} else if annotations[0] != anno {
++	} else if annotations[1] != anno {
+ 		t.Errorf("wrong annotation: got %+v, want %+v", annotations[0], anno)
+ 	}
+ 
+diff --git a/db/db.go b/db/db.go
+index 4dff92e..92dabe1 100644
+--- a/db/db.go
++++ b/db/db.go
+@@ -3,6 +3,7 @@ package db
+ import (
+ 	"errors"
+ 	"fmt"
++
+ 	"github.com/echlebek/erickson/review"
+ )
+ 
+@@ -30,7 +31,7 @@ func (e ErrNoAnnotation) Error() string {
+ type Database interface {
+ 	// CreateReview creates a new review. It returns the ID of the review and
+ 	// an error if the review could not be created.
+-	CreateReview(review.Summary) (id int, err error)
++	CreateReview(review.R) (id int, err error)
+ 
+ 	// GetReview gets a review by ID.
+ 	GetReview(id int) (review.R, error)
+diff --git a/resource/resource.go b/resource/resource.go
+index 33a067d..5423f0a 100644
+--- a/resource/resource.go
++++ b/resource/resource.go
+@@ -1,6 +1,8 @@
+ package resource
+ 
+ import (
++	"time"
++
+ 	"github.com/echlebek/erickson/review"
+ )
+ 
+@@ -24,6 +26,27 @@ type Review struct {
+ 	URL              string
+ }
+ 
++// CSS label class will be rendered according to the status
++func (r ReviewSummary) StatusLabel() string {
++	switch r.Status {
++	case review.Open:
++		return "label-primary"
++	case review.Submitted:
++		return "label-success"
++	case review.Discarded:
++		return "label-danger"
++	}
++	return "label-default"
++}
++
++func (r Review) StatusOpen() bool {
++	return r.Status == review.Open
++}
++
++func (r ReviewSummary) SubmittedAt() string {
++	return r.Summary.SubmittedAt.Format(time.UnixDate)
++}
++
+ type DiffLine struct {
+ 	LHS string
+ 	RHS string
+@@ -59,7 +82,7 @@ func (d DiffLine) RHSColour() string {
+ type SummaryBySubmitTime []ReviewSummary
+ 
+ func (s SummaryBySubmitTime) Less(i, j int) bool {
+-	return s[i].SubmittedAt.After(s[j].SubmittedAt)
++	return s[i].Summary.SubmittedAt.After(s[j].Summary.SubmittedAt)
+ }
+ 
+ func (s SummaryBySubmitTime) Swap(i, j int) {
+diff --git a/review/review.go b/review/review.go
+index 9b52386..81a466b 100644
+--- a/review/review.go
++++ b/review/review.go
+@@ -7,9 +7,9 @@ import (
+ )
+ 
+ const (
+-	Open      = "open"
+-	Submitted = "submitted"
+-	Discarded = "discarded"
++	Open      = "Open"
++	Submitted = "Submitted"
++	Discarded = "Discarded"
+ )
+ 
+ var (
+diff --git a/server/coverage.out b/server/coverage.out
+deleted file mode 100644
+index 417a2cc..0000000
+--- a/server/coverage.out
++++ /dev/null
+@@ -1,53 +0,0 @@
+-mode: set
+-github.com/echlebek/erickson/server/server.go:30.107,31.54 1 1
+-github.com/echlebek/erickson/server/server.go:37.2,37.28 1 1
+-github.com/echlebek/erickson/server/server.go:31.54,36.3 4 1
+-github.com/echlebek/erickson/server/server.go:40.64,71.2 12 1
+-github.com/echlebek/erickson/server/server.go:73.43,75.16 2 1
+-github.com/echlebek/erickson/server/server.go:78.2,79.8 2 1
+-github.com/echlebek/erickson/server/server.go:75.16,77.3 1 0
+-github.com/echlebek/erickson/server/server.go:82.61,86.16 4 0
+-github.com/echlebek/erickson/server/server.go:89.2,90.8 2 0
+-github.com/echlebek/erickson/server/server.go:86.16,88.3 1 0
+-github.com/echlebek/erickson/server/util.go:9.62,14.16 3 0
+-github.com/echlebek/erickson/server/util.go:14.16,16.3 1 0
+-github.com/echlebek/erickson/server/handlers.go:17.66,19.16 2 0
+-github.com/echlebek/erickson/server/handlers.go:24.2,25.16 2 0
+-github.com/echlebek/erickson/server/handlers.go:29.2,30.25 2 0
+-github.com/echlebek/erickson/server/handlers.go:35.2,39.46 3 0
+-github.com/echlebek/erickson/server/handlers.go:19.16,23.3 3 0
+-github.com/echlebek/erickson/server/handlers.go:25.16,28.3 2 0
+-github.com/echlebek/erickson/server/handlers.go:30.25,34.3 3 0
+-github.com/echlebek/erickson/server/handlers.go:39.46,43.3 3 0
+-github.com/echlebek/erickson/server/handlers.go:46.71,48.16 2 1
+-github.com/echlebek/erickson/server/handlers.go:52.2,52.43 1 1
+-github.com/echlebek/erickson/server/handlers.go:56.2,59.16 3 1
+-github.com/echlebek/erickson/server/handlers.go:65.2,67.21 2 1
+-github.com/echlebek/erickson/server/handlers.go:71.2,77.45 2 1
+-github.com/echlebek/erickson/server/handlers.go:48.16,51.3 2 0
+-github.com/echlebek/erickson/server/handlers.go:52.43,55.3 2 0
+-github.com/echlebek/erickson/server/handlers.go:59.16,63.3 3 0
+-github.com/echlebek/erickson/server/handlers.go:67.21,69.3 1 1
+-github.com/echlebek/erickson/server/handlers.go:77.45,80.3 2 0
+-github.com/echlebek/erickson/server/handlers.go:83.72,86.39 3 1
+-github.com/echlebek/erickson/server/handlers.go:90.2,90.27 1 1
+-github.com/echlebek/erickson/server/handlers.go:94.2,95.16 2 1
+-github.com/echlebek/erickson/server/handlers.go:100.2,101.34 2 1
+-github.com/echlebek/erickson/server/handlers.go:107.2,108.33 2 1
+-github.com/echlebek/erickson/server/handlers.go:86.39,89.3 2 0
+-github.com/echlebek/erickson/server/handlers.go:90.27,93.3 2 0
+-github.com/echlebek/erickson/server/handlers.go:95.16,99.3 3 0
+-github.com/echlebek/erickson/server/handlers.go:101.34,102.53 1 1
+-github.com/echlebek/erickson/server/handlers.go:102.53,105.4 2 0
+-github.com/echlebek/erickson/server/handlers.go:111.74,113.61 2 0
+-github.com/echlebek/erickson/server/handlers.go:117.2,117.58 1 0
+-github.com/echlebek/erickson/server/handlers.go:122.2,126.60 3 0
+-github.com/echlebek/erickson/server/handlers.go:113.61,116.3 2 0
+-github.com/echlebek/erickson/server/handlers.go:117.58,121.3 3 0
+-github.com/echlebek/erickson/server/handlers.go:126.60,130.3 3 0
+-github.com/echlebek/erickson/server/handlers.go:133.75,135.64 2 1
+-github.com/echlebek/erickson/server/handlers.go:139.2,139.77 1 1
+-github.com/echlebek/erickson/server/handlers.go:135.64,138.3 2 0
+-github.com/echlebek/erickson/server/handlers.go:139.77,142.3 2 0
+-github.com/echlebek/erickson/server/handlers.go:145.74,146.56 1 1
+-github.com/echlebek/erickson/server/handlers.go:146.56,148.3 1 0
+diff --git a/server/handlers.go b/server/handlers.go
+index 8257d57..35aea42 100644
+--- a/server/handlers.go
++++ b/server/handlers.go
+@@ -3,11 +3,14 @@ package server
+ import (
+ 	"encoding/json"
+ 	"errors"
++	"fmt"
++	"html"
+ 	"log"
+ 	"net/http"
+ 	"path/filepath"
+ 	"sort"
+ 	"text/template"
++	"time"
+ 
+ 	"github.com/echlebek/erickson/diff"
+ 	"github.com/echlebek/erickson/resource"
+@@ -65,7 +68,12 @@ func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
+ 	diff := make([]resource.DiffLine, 0, len(lhs))
+ 
+ 	for i := range lhs {
+-		diff = append(diff, resource.DiffLine{LHS: lhs[i], RHS: rhs[i]})
++		diff = append(diff, resource.DiffLine{
++			// Sec: LHS and RHS MUST be HTMLEscaped or a user could
++			// inject a script into the rendered page.
++			LHS: html.EscapeString(lhs[i]),
++			RHS: html.EscapeString(rhs[i]),
++		})
+ 	}
+ 
+ 	res := resource.Review{
+@@ -81,6 +89,62 @@ func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
+ }
+ 
+ func postReview(ctx context, w http.ResponseWriter, req *http.Request) {
++	switch req.Header.Get("Content-Type") {
++	case "application/json":
++		postJSONReview(ctx, w, req)
++	case "application/x-www-form-urlencoded":
++		postFormReview(ctx, w, req)
++	}
++}
++
++func patchReview(ctx context, w http.ResponseWriter, req *http.Request) {
++	p := struct {
++		Status string `json:"status"`
++	}{}
++	if err := json.NewDecoder(req.Body).Decode(&p); err != nil {
++		http.Error(w, err.Error(), http.StatusBadRequest)
++		return
++	}
++	review, err := ctx.db.GetReview(ctx.review)
++	if err != nil {
++		http.Error(w, fmt.Sprintf("review %d not found", ctx.review), http.StatusNotFound)
++		return
++	}
++	review.Summary.Status = p.Status
++	ctx.db.SetSummary(ctx.review, review.Summary)
++	http.Redirect(w, req, "/", 303)
++}
++
++func postFormReview(ctx context, w http.ResponseWriter, req *http.Request) {
++	if err := req.ParseForm(); err != nil {
++		log.Println(err)
++		http.Error(w, "couldn't parse form", 400)
++		return
++	}
++	r := review.R{
++		Summary: review.Summary{
++			CommitMsg:   req.FormValue("commitmsg"),
++			Submitter:   req.FormValue("username"),
++			Repository:  req.FormValue("repository"),
++			SubmittedAt: time.Now(),
++			Status:      review.Open,
++		},
++		Revisions: []review.Revision{
++			{Patches: req.FormValue("diff")},
++		},
++	}
++	id, err := ctx.db.CreateReview(r)
++	if err != nil {
++		log.Println(err)
++		http.Error(w, "couldn't create review", 500)
++		return
++	}
++	ctx.review = id
++	url := ctx.reviewURL()
++	http.Redirect(w, req, url, 303)
++}
++
++func postJSONReview(ctx context, w http.ResponseWriter, req *http.Request) {
+ 	var r review.R
+ 	dec := json.NewDecoder(req.Body)
+ 	if err := dec.Decode(&r); err != nil {
+@@ -91,19 +155,15 @@ func postReview(ctx context, w http.ResponseWriter, req *http.Request) {
+ 		http.Error(w, "no revisions provided", 400)
+ 		return
+ 	}
+-	id, err := ctx.db.CreateReview(r.Summary)
++	r.Summary.SubmittedAt = time.Now()
++	r.Summary.Status = review.Open
++	id, err := ctx.db.CreateReview(r)
+ 	if err != nil {
+ 		log.Println(err)
+ 		http.Error(w, "couldn't create review", 500)
+ 		return
+ 	}
+ 	ctx.review = id
+-	for _, rev := range r.Revisions {
+-		if err := ctx.db.AddRevision(id, rev); err != nil {
+-			log.Println(err)
+-			http.Error(w, "couldn't create review", 500)
+-		}
+-	}
+ 	url := ctx.reviewURL()
+ 	http.Redirect(w, req, url, 303)
+ }
+diff --git a/server/server.go b/server/server.go
+index 2d2d151..f9d4f09 100644
+--- a/server/server.go
++++ b/server/server.go
+@@ -63,7 +63,7 @@ func (c context) revisionURL(id, revision int) (str string) {
+ //
+ // / GET
+ // /reviews GET, POST
+-// /reviews/{id} GET, DELETE
++// /reviews/{id} GET, PATCH, DELETE
+ // /reviews/{id}/rev POST
+ // /reviews/{id}/rev/{revision} GET, PATCH
+ //
+@@ -88,6 +88,9 @@ func NewRootHandler(d db.Database, fsRoot string) *RootHandler {
+ 	r.HandleFunc("/reviews/{id}", ctx.handler(deleteReview)).
+ 		Methods("DELETE")
+ 
++	r.HandleFunc("/reviews/{id}", ctx.handler(patchReview)).
++		Methods("PATCH")
++
+ 	r.HandleFunc("/reviews/{id}/rev/{revision}", ctx.handler(getReview)).
+ 		Name("revision").
+ 		Methods("GET")
+diff --git a/static/css/main.css b/static/css/main.css
+index f99dd4c..63c3177 100644
+--- a/static/css/main.css
++++ b/static/css/main.css
+@@ -1,154 +1,14 @@
+-.borderless td, .borderless th {
+-    border: none !important;
++#diff tr:hover {
++	opacity: .7;
+ }
+ 
+-//
+-// Variables
+-// ----------------------
+-
+-@gray: #333;
+-@gray-light: #aaa;
+-@gray-lighter: #eee;
+-@space: 40px;
+-@blue: #428bca;
+-@blue-dark: darken(@blue, 5%);
+-
+-// Mixin for transition/transform
+-.translate(@x; @y) {
+-  -webkit-transform: translate(@x, @y);
+-      -ms-transform: translate(@x, @y); // IE9+
+-          transform: translate(@x, @y);
+-}
+-.transition(@transition) {
+-  -webkit-transition: @transition;
+-          transition: @transition;
+-}
+-.transition-transform(@transition) {
+-  -webkit-transition: -webkit-transform @transition;
+-     -moz-transition: -moz-transform @transition;
+-       -o-transition: -o-transform @transition;
+-          transition: transform @transition;
+-}
+-
+-//
+-// Body
+-// ----------------------
+-
+-body{
+-  color: @gray;
+-  font-family: 'Helvetica', arial;
+-  height: 80em;
+-}
+-
+-.wrap{
+-  padding: @space;
+-  text-align: center;
+-}
+-
+-hr {
+-  clear: both;
+-  margin-top: @space;
+-  margin-bottom: @space;
+-  border: 0;
+-  border-top: 1px solid @gray-light;
+-}
+-
+-h1{
+-  font-size: 30px;
+-  margin-bottom: @space;
+-}
+-
+-p{
+-  margin-bottom: @space/2;
+-}
+-
+-//
+-// Btn 
+-// ----------------------
+-
+-.btn{
+-  background: @blue;
+-  border: @blue-dark solid 1px;
+-  border-radius: 3px;
+-  color: #fff;
+-  display: inline-block;
+-  font-size: 14px;
+-  padding: 8px 15px;
+-  text-decoration: none;
+-  text-align: center;
+-  min-width: 60px;
+-  position: relative;
+-  transition: color .1s ease;
+-  /* top: 40em;*/
+-  
+-  &:hover{
+-    background: @blue-dark;
+-  }
+-  
+-  &.btn-big{
+-    font-size: 18px;
+-    padding: 15px 20px;
+-    min-width: 100px;
+-  }
+-  
++#diff tr:selected {
++	opacity: .7;
+ }
+ 
+-.btn-close{
+-  color: @gray-light;
+-  font-size: 30px;
+-  text-decoration: none;
+-  position: absolute; right: 5px; top: 0;
+-  
+-  &:hover{
+-     color: darken(@gray-light, 10%);
+-  }
+-  
+-}
+-/* Normal styles for the modal */
+-#modal {
+-	background:#fff;
+-	left:50%;
+-	margin:-250px 0 0 -40%;
+-	position:absolute;
+-	top:-50%;
+-	width:80%;
+-	border-radius:5px;
+-	box-shadow:0 3px 7px rgba(0,0,0,.25);
+-	-moz-box-shadow:0 3px 7px rgba(0,0,0,.25);
+-	-webkit-box-shadow:0 3px 7px rgba(0,0,0,.25);
+-	box-sizing:border-box;
+-	-moz-box-sizing:border-box;
+-	-webkit-box-sizing:border-box;
+-}
+-/* Make the modal appear when targeted */
+-#modal:target {
+-	top:50%;
+-	transition: all 0.4s ease-in-out;
+-	-moz-transition: all 0.4s ease-in-out;
+-	-webkit-transition: all 0.4s ease-in-out;
+-}
++::selection { background: transparent; }
++::-moz-selection { background: transparent; }
+ 
+-#modal header,#modal footer {
+-	background:#f7f7f7;
+-	border-bottom: 1px solid #e7e7e7;
+-	border-radius: 5px 5px 0 0;
+-	-moz-border-radius: 5px 5px 0 0;
+-	-webkit-border-radius: 5px 5px 0 0;
+-}
+-	#modal footer {
+-		border:none;
+-		border-top: 1px solid #e7e7e7;
+-		border-radius: 0 0 5px 5px;
+-		-moz-border-radius: 0 0 5px 5px;
+-		-webkit-border-radius: 0 0 5px 5px;
+-	}
+-#modal section,#modal header, #modal footer {
+-	padding:15px;
+-	z-index:200;
+-}
+-#modal h2 {
+-	margin:0;
+-}
+-#modal .btn {
+-	float:right;
++code {
++	tab-size: 0;
+ }
+diff --git a/static/html/index.html b/static/html/index.html
+deleted file mode 100644
+index 8b95629..0000000
+--- a/static/html/index.html
++++ /dev/null
+@@ -1,45 +0,0 @@
+-<!DOCTYPE html>
+-<html lang="en">
+-  <head>
+-    <meta name="viewport" content="width=device-width, initial-scale=1">
+-    <!-- Latest compiled and minified CSS -->
+-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+-    <!-- Optional theme -->
+-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+-    <!-- Latest compiled and minified JavaScript -->
+-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+-  </head>
+-  <body>
+-    <nav class="navbar navbar-inverse navbar-fixed-top">
+-    <div class="container">
+-      <div class="navbar-header">
+-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+-          <span class="sr-only">Toggle navigation</span>
+-          <span class="icon-bar"></span>
+-          <span class="icon-bar"></span>
+-          <span class="icon-bar"></span>
+-        </button>
+-        <a class="navbar-brand" href="#">Erickson Code Review</a>
+-      </div>
+-      <div id="navbar" class="navbar-collapse collapse">
+-        <form class="navbar-form navbar-right">
+-          <div class="form-group">
+-            <input type="text" placeholder="Email" class="form-control">
+-          </div>
+-          <div class="form-group">
+-            <input type="password" placeholder="Password" class="form-control">
+-          </div>
+-          <button type="submit" class="btn btn-success">Sign in</button>
+-        </form>
+-      </div><!--/.navbar-collapse -->
+-    </div>
+-    </nav>
+-    <!-- Main jumbotron for a primary marketing message or call to action -->
+-    <div class="jumbotron">
+-      <div class="container">
+-        <h1>Erickson</h1>
+-        <p>Erickson is a simple code review tool.</p>
+-      </div>
+-    </div>
+-  </body>
+-</html>
+diff --git a/static/html/review.html b/static/html/review.html
+index 8a400b0..9af0bc8 100644
+--- a/static/html/review.html
++++ b/static/html/review.html
+@@ -10,6 +10,7 @@
+     <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+     <link rel="stylesheet" href="/static/css/main.css">
++    <script src="/static/js/main.js"></script>
+     <style>
+       .code-pre {
+         font-size: 12px;
+@@ -21,15 +22,6 @@
+     </style>
+   </head>
+   <body>
+-    <aside id="modal">
+-      <header>
+-        <h2>Add comment</h2>
+-      </header>
+-      <input class="input">Put some stuff here </input>
+-      <footer class="cf">
+-        <a href="#" class="btn">Close</a>
+-      </footer>
+-    </aside>
+     <nav class="navbar navbar-inverse navbar-fixed-top">
+     <div class="container">
+       <div class="navbar-header">
+@@ -39,13 +31,24 @@
+           <span class="icon-bar"></span>
+           <span class="icon-bar"></span>
+         </button>
+-        <a class="navbar-brand" href="#">Erickson Code Review</a>
++        <a class="navbar-brand" href="/">Erickson Code Review</a>
++      </div>
++      <div id="navbar" class="navbar-collapse collapse">
++        <div class="navbar-form navbar-right">
++          {{ if .StatusOpen }}
++            <button onClick="submitReview()" class="btn btn-success">Submit Review</button>
++            <button onClick="discardReview()" class="btn btn-danger">Discard Review</button>
++          {{ else }}
++            <button onClick="reopenReview()" class="btn btn-primary">Re-open Review</button>
++          {{ end }}
++        </div>
+       </div>
+     </div>
+     </nav>
+     <div class="jumbotron">
+       <div class="container">
+-        <h2>Review {{.ID}}</h2>
++        <h2>Review {{.ID}} - {{.Status}}</h2>
++        <h3>{{.CommitMsg}}</h3>
+         <!--
+         <h4>Revisions</h4>
+         <ul class="pagination">
+@@ -54,20 +57,26 @@
+           {{end}}
+         </ul>
+         -->
+-        <h4>Diff View</h4>
+         <div class="container container-fluid">
+       </div>
+     </div>
+     <div class="container">
+-      <table style="width: 100%; display: table;" class="table table-condensed borderless">
++      <table style="width: 100%; display: table;" class="table table-condensed borderless" id="diff">
+         {{ range $i, $v := .Diff }}
+         <tr style="padding: 0px; border: none">
+-          <a href="#modal">
+-          <td style="background-color: {{$v.LHSColour}}; padding: 0px; border: none; width: 50%">
+-            <a href="#modal"><pre class="code-pre"><code style="background-color: inherit;">{{$v.LHS}}</code></pre></a>
++          <td style="background-color: {{$v.LHSColour}}; padding: 0px; border: none; width: 2%">
++            <pre class="code-pre"><code style="background-color: inherit;"> {{$i}}</code></pre>
++          </td>
++          <td style="background-color: {{$v.LHSColour}}; padding: 0px; border: none; width: 49%">
++            <pre class="code-pre"><code style="background-color: inherit;"> {{$v.LHS}}</code></pre>
+           </td>
+-          <td style="background-color: {{$v.RHSColour}}; padding: 0px; border: none; width: 50%">
+-            <a href="#modal"><pre class="code-pre"><code style="background-color: inherit;">{{$v.RHS}}</code></pre></a>
++          <td style="background-color: {{$v.RHSColour}}; padding: 0px; border: none; width: 49%">
++            <pre class="code-pre"><code style="background-color: inherit;"> {{$v.RHS}}</code></pre>
++          </td>
++        </tr>
++        <tr>
++          <td class="hidden" style="border: none;">
++            HI!!!!
+           </td>
+         </tr>
+         {{ end }}
+diff --git a/static/html/reviews.html b/static/html/reviews.html
+index 3c3f1e4..cdd894a 100644
+--- a/static/html/reviews.html
++++ b/static/html/reviews.html
+@@ -7,7 +7,10 @@
+     <!-- Optional theme -->
+     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+     <!-- Latest compiled and minified JavaScript -->
++    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
++    <link rel="stylesheet" href="static/css/main.css">
++    <script src="static/js/main.js"></script>
+   </head>
+   <body>
+     <nav class="navbar navbar-inverse navbar-fixed-top">
+@@ -19,30 +22,60 @@
+           <span class="icon-bar"></span>
+           <span class="icon-bar"></span>
+         </button>
+-        <a class="navbar-brand" href="#">Erickson Code Review</a>
++        <a class="navbar-brand" href="/">Erickson Code Review</a>
++      </div>
++      <div id="navbar" class="navbar-collapse collapse">
++        <div class="navbar-form navbar-right">
++          <button onClick="createReview()" class="btn btn-primary">Create Review</button>
++          <button onClick="cancelReview()" class="btn btn-danger hidden" id="cancel-button">Cancel</button>
++        </div>
+       </div>
+     </div>
+     </nav>
+-    <!-- Main jumbotron for a primary marketing message or call to action -->
+     <div class="jumbotron">
++      <div class="container create-review hidden" id="create-review">
++        <h3>Create a new review by uploading a diff. It's easy!</h3>
++        <form method="post" action="/reviews">
++          <div class="form-group">
++            <label for="diff">Paste a diff</label>
++            <textarea class="form-control" name="diff" id="diff" rows="10"></textarea>
++          </div>
++          <div class="form-group">
++            <label for="diff-file">Or choose a file</label>
++            <input class="form-control" type="file" onchange="pasteFile(this.files[0])">
++          </div>
++          <div class="form-group">
++            <label>Tell me a bit about the review, and yourself</label>
++            <input class="form-control" type="text" name="commitmsg" placeholder="Commit Message">
++            <input class="form-control" type="text" name="username" placeholder="User Name">
++            <input class="form-control" type="text" name="repository" placeholder="Repository Name">
++          </div>
++          <button type="submit" onClick="submitReview()" class="btn btn-success">Submit</button> 
++        </form>
++      </div>
+       <div class="container">
+         <h2>Reviews</h2>
++        <div class="checkbox">
++          <label>
++            <input id="show-all" onClick="toggleShowAll()" type="checkbox" value="false">Show Submitted and Discarded Reviews</input>
++          </label>
++        </div>
+         <table class="table table-hover">
+           <thead>
+             <th>Review</th>
++            <th>Repository</th>
+             <th>Submitter</th>
+             <th>Submitted At</th>
+             <th>Status</th>
+-            <th>Repository</th>
+           </thead>
+           <tbody>
+             {{range $i, $v := .Reviews}}
+             <tr>
+-              <td><a href="{{$v.URL}}"><span class="label label-primary">Review {{$v.ID}}</span></a></td>
++              <td><a href="{{$v.URL}}"><span title="{{$v.CommitMsg}}" class="label label-primary">Review {{$v.ID}}</span></a></td>
++              <td>{{$v.Repository}}</td>
+               <td>{{$v.Submitter}}</td>
+               <td>{{$v.SubmittedAt}}</td>
+-              <td>{{$v.Status}}</td>
+-              <td>{{$v.Repository}}</td>
++              <td><span id="status-{{$i}}" class="label {{$v.StatusLabel}}">{{$v.Status}}</span></td>
+             </tr>
+             {{end}}
+           <tbody>
+diff --git a/static/js/main.js b/static/js/main.js
+new file mode 100644
+index 0000000..8b6b225
+--- /dev/null
++++ b/static/js/main.js
+@@ -0,0 +1,87 @@
++function createReview() {
++  $("#create-review").removeClass("hidden");
++  $("#cancel-button").removeClass("hidden");
++}
++
++function cancelReview() {
++  $("#create-review").addClass("hidden");
++  $("#cancel-button").addClass("hidden");
++}
++
++function submitReview() {
++  patchReview("Submitted");
++}
++
++function discardReview() {
++  patchReview("Discarded");
++}
++
++function reopenReview() {
++  patchReview("Open");
++}
++
++function toggleShowAll() {
++  if ($("#show-all").is(":checked")) {
++    $("tr").show();
++  } else {
++    $("td > span").filter(function () {
++      return $(this).text() !== "Open";
++    }).parent().parent().hide();
++  }
++}
++
++function patchReview(status) {
++  $.ajax({
++    headers: {
++      "Content-Type": "application/json"
++    },
++    url: window.location,
++    type: "PATCH",
++    data: JSON.stringify({status: status}),
++    complete: function() {
++      window.location.reload();
++    }
++  });
++}
++
++function pasteFile(file) {
++  var reader = new FileReader();
++  reader.onload = function(e) {
++    $("#diff").text(e.target.result);
++  }
++  reader.readAsText(file);
++}
++
++// inclusive selection object
++var sel = {
++  start: null,
++  stop: null,
++};
++
++window.onload = function() {
++  // Show only the selected reviews
++  toggleShowAll();
++
++  // Install event handlers
++  $("table").on("mousedown", function (e) {
++    var tr = $(e.target).parents("tr")[0];
++    if (!!tr) {
++      sel.start = tr.rowIndex;
++    }
++    console.log(sel.start);
++  });
++  $("table").on("mouseup", function (e) {
++    var tr = $(e.target).parents("tr")[0];
++    if (!!tr) {
++      sel.stop = tr.rowIndex;
++    } else {
++      sel.stop = sel.start;
++    }
++    if (sel.start < sel.stop) {
++      var tmp = sel.start;
++      sel.start = sel.stop;
++      sel.stop = tmp;
++    }
++    console.log(sel.stop);
++  });
++}

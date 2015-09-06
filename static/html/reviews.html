@@ -50,7 +50,7 @@
             <input class="form-control" type="text" name="username" placeholder="User Name">
             <input class="form-control" type="text" name="repository" placeholder="Repository Name">
           </div>
-          <button type="submit" onClick="submitReview()" class="btn btn-success">Submit</button> 
+          <button type="submit" class="btn btn-success">Submit</button> 
         </form>
       </div>
       <div class="container">
@@ -71,7 +71,7 @@
           <tbody>
             {{range $i, $v := .Reviews}}
             <tr>
-              <td><a href="{{$v.URL}}"><span class="label label-primary">Review {{$v.ID}}</span></a></td>
+              <td><a href="{{$v.URL}}"><span title="{{$v.CommitMsg}}" class="label label-primary">Review {{$v.ID}}</span></a></td>
               <td>{{$v.Repository}}</td>
               <td>{{$v.Submitter}}</td>
               <td>{{$v.SubmittedAt}}</td>

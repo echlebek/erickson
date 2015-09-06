@@ -6,13 +6,6 @@ import (
 	"github.com/echlebek/erickson/review"
 )
 
-// File is a resource that represents a file.
-type File struct {
-	Name string
-	Type string
-	URL  string
-}
-
 type ReviewSummary struct {
 	URL string
 	review.Summary
@@ -22,7 +15,6 @@ type ReviewSummary struct {
 type Review struct {
 	review.R
 	SelectedRevision int
-	Diff             []DiffLine
 	URL              string
 }
 
@@ -48,35 +40,37 @@ func (r ReviewSummary) SubmittedAt() string {
 }
 
 type DiffLine struct {
-	LHS string
-	RHS string
+	LHS     string
+	RHS     string
+	lhsline int
+	rhsline int
 }
 
 const (
-	yellow = "#FDFCDC"
-	red    = "#FA8072"
-	green  = "#7FFFD4"
-	bg     = "#FFFFFF"
+	deletion     = "deletion"
+	modification = "modification"
+	insertion    = "insertion"
+	unchanged    = "unchanged"
 )
 
-func (d DiffLine) LHSColour() string {
+func (d DiffLine) LHSType() string {
 	if d.LHS != "" && d.LHS[0] == '-' && d.RHS == "" {
-		return red
+		return "deletion"
 	}
 	if d.LHS != "" && d.LHS[0] == '-' && d.RHS != "" && d.RHS[0] == '+' {
-		return yellow
+		return "modification"
 	}
-	return bg
+	return unchanged
 }
 
 func (d DiffLine) RHSColour() string {
 	if d.LHS != "" && d.LHS[0] == '-' && d.RHS != "" && d.RHS[0] == '+' {
-		return yellow
+		return modification
 	}
 	if d.LHS == "" && d.RHS != "" && d.RHS[0] == '+' {
-		return green
+		return insertion
 	}
-	return bg
+	return unchanged
 }
 
 type SummaryBySubmitTime []ReviewSummary

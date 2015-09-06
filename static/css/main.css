@@ -1,10 +1,52 @@
-#diff tr:hover {
-	opacity: .7;
-}
-
 #diff tr:selected {
 	opacity: .7;
 }
 
+#diff td {
+	padding: 0px;
+	border: none;
+}
+
 ::selection { background: transparent; }
 ::-moz-selection { background: transparent; }
+
+code {
+	tab-size: 4;
+	background-color: inherit;
+}
+
+.code-pre {
+	color: inherit;
+}
+
+.insertion {
+	background-color: #7FFFD4;
+}
+
+.deletion {
+	background-color: #FA8072;
+}
+
+.modification {
+	background-color: #FDFCDC;
+}
+
+.unchanged {
+	background-color: white;
+}
+
+.line {
+	width: 47%;
+}
+
+.lineno {
+	color: grey;
+	background-color: #EDF8FB;
+	width: 3%;
+	opacity: 50%;
+}
+
+.spanner {
+	background-color: #EDF8FB;
+	font-weight: bold;
+}

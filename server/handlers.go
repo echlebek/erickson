@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -56,7 +55,6 @@ func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
 		http.NotFound(w, req)
 		return
 	}
-	lhs, rhs := diff.SideBySide(review.Revisions[ctx.revision].Patches)
 
 	tmpl, err := template.ParseFiles(filepath.Join(ctx.fsRoot, "static/html/review.html"))
 	if err != nil {
@@ -65,21 +63,9 @@ func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	diff := make([]resource.DiffLine, 0, len(lhs))
-
-	for i := range lhs {
-		diff = append(diff, resource.DiffLine{
-			// Sec: LHS and RHS MUST be HTMLEscaped or a user could
-			// inject a script into the rendered page.
-			LHS: html.EscapeString(lhs[i]),
-			RHS: html.EscapeString(rhs[i]),
-		})
-	}
-
 	res := resource.Review{
 		R:                review,
 		SelectedRevision: ctx.revision,
-		Diff:             diff,
 		URL:              ctx.reviewURL(),
 	}
 	if err := tmpl.Execute(w, res); err != nil {
@@ -121,6 +107,13 @@ func postFormReview(ctx context, w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "couldn't parse form", 400)
 		return
 	}
+	raw := req.FormValue("diff")
+	files, err := diff.ParseFiles(raw)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "couldn't parse diff", http.StatusBadRequest)
+		return
+	}
 	r := review.R{
 		Summary: review.Summary{
 			CommitMsg:   req.FormValue("commitmsg"),
@@ -130,7 +123,7 @@ func postFormReview(ctx context, w http.ResponseWriter, req *http.Request) {
 			Status:      review.Open,
 		},
 		Revisions: []review.Revision{
-			{Patches: req.FormValue("diff")},
+			{Files: files},
 		},
 	}
 	id, err := ctx.db.CreateReview(r)

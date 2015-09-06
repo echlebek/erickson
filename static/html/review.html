@@ -49,30 +49,45 @@
       <div class="container">
         <h2>Review {{.ID}} - {{.Status}}</h2>
         <h3>{{.CommitMsg}}</h3>
-        <!--
-        <h4>Revisions</h4>
-        <ul class="pagination">
-          {{ range $i, $v := .Revisions }}
-          <li><a href="{{$.URL}}/revision/{{$i}}">Revision {{$i}}</a></li>
-          {{end}}
-        </ul>
-        -->
         <div class="container container-fluid">
       </div>
     </div>
     <div class="container">
+      {{ range $r, $revision := .R.Revisions }}
+      <h3>Revision {{ $r }}</h3>
+      {{ range $i, $f := $revision.Files }}
       <table style="width: 100%; display: table;" class="table table-condensed borderless" id="diff">
-        {{ range $i, $v := .Diff }}
+        <td class="spanner"></td>
+        <td class="spanner"><pre class="code-pre"><code>--- {{ $f.OldName }}</code></pre></td>
+        <td class="spanner"><pre class="code-pre"><code>+++ {{ $f.NewName }}</code></pre></td>
+        <td class="spanner"></td>
+        {{ range $j, $hunk := $f.Hunks }}
+        {{ range $k, $lhs := $hunk.LHS }}
         <tr style="padding: 0px; border: none">
-          <td style="background-color: {{$v.LHSColour}}; padding: 0px; border: none; width: 50%">
-            <pre class="code-pre"><code style="background-color: inherit;">{{$v.LHS}}</code></pre>
+          <td class="lineno {{ (index $hunk.LHS $k).Type }}">
+            <pre class="code-pre"><code> {{ (index $hunk.LHS $k).Line }}</code></pre>
           </td>
-          <td style="background-color: {{$v.RHSColour}}; padding: 0px; border: none; width: 50%">
-            <pre class="code-pre"><code style="background-color: inherit;">{{$v.RHS}}</code></pre>
+          <td class="line {{ (index $hunk.LHS $k).Type }}">
+            <pre class="code-pre"><code> {{ (index $hunk.LHS $k).Text }}</code></pre>
+          </td>
+          <td class="line {{ (index $hunk.RHS $k).Type }}">
+            <pre class="code-pre"><code> {{(index $hunk.RHS $k).Text }}</code></pre>
+          </td>
+          <td class="lineno {{ (index $hunk.RHS $k).Type }}">
+            <pre class="code-pre"><code> {{ (index $hunk.RHS $k).Line }}</code></pre>
           </td>
         </tr>
         {{ end }}
+        <tr>
+          <td class="spanner">&#10714;</td>
+          <td class="spanner"></td>
+          <td class="spanner"></td>
+          <td class="spanner">&#10715;</td>
+        </tr>
+        {{ end }}
       </table>
+      {{ end }}
+      {{ end }}
     </div>
   </div>
 </body>

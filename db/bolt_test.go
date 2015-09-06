@@ -1,7 +1,6 @@
 package db
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -9,6 +8,7 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
+	"github.com/echlebek/erickson/diff"
 	"github.com/echlebek/erickson/review"
 )
 
@@ -44,23 +44,31 @@ const mockDiff2 = `--- a/setup.py	Mon Aug 05 22:46:08 2013 -0700
 +    install_requires=["h5py"]
  )`
 
-var mockReview = review.R{
-	Summary: review.Summary{
-		Submitter:   "eric",
-		SubmittedAt: time.Now(),
-		UpdatedAt:   time.Now(),
-	},
-	Revisions: []review.Revision{
-		{
-			Patches: mockDiff1,
-			Annotations: []review.Annotation{
-				{FileNumber: 0, LineNumber: 0, Message: "foo"},
+var mockReview review.R
+
+func init() {
+	files, err := diff.ParseFiles(mockDiff1)
+	if err != nil {
+		panic(err)
+	}
+	mockReview = review.R{
+		Summary: review.Summary{
+			Submitter:   "eric",
+			SubmittedAt: time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+		Revisions: []review.Revision{
+			{
+				Files: files,
+				Annotations: []review.Annotation{
+					{FileNumber: 0, LineNumber: 0, Message: "foo"},
+				},
 			},
 		},
-	},
+	}
 }
 
-// define an equality function for comparing reviews that gives
+// TODO: define an equality function for comparing reviews that gives
 // the difference found.
 func reviewEq(r1, r2 review.R) bool {
 	if r1.Summary != r2.Summary {
@@ -70,8 +78,12 @@ func reviewEq(r1, r2 review.R) bool {
 		return false
 	}
 	for i := range r1.Revisions {
-		if r1.Revisions[i].Patches != r2.Revisions[i].Patches {
-			return false
+		for j := range r1.Revisions[i].Files {
+			for k := range r1.Revisions[i].Files[j].Lines {
+				if r1.Revisions[i].Files[j].Lines[k] != r2.Revisions[i].Files[j].Lines[k] {
+					return false
+				}
+			}
 		}
 		if !reflect.DeepEqual(r1.Revisions[i].Annotations, r2.Revisions[i].Annotations) {
 			return false
@@ -142,7 +154,11 @@ func TestCRUD(t *testing.T) {
 	if exp := 2; id != exp {
 		t.Errorf("wrong review id. got %d, want %d", id, exp)
 	}
-	if err := db.AddRevision(2, review.Revision{Patches: mockDiff2}); err != nil {
+	files, err := diff.ParseFiles(mockDiff2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := db.AddRevision(2, review.Revision{Files: files}); err != nil {
 		t.Fatal(err)
 	}
 	gotReview, err = db.GetReview(2)
@@ -152,7 +168,9 @@ func TestCRUD(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if reviewEq(gotReview, mockReview2) {
+	mockReview2.Revisions = append(mockReview2.Revisions, review.Revision{Files: files})
+
+	if !reviewEq(gotReview, mockReview2) {
 		t.Errorf("bad review data. got %+v, want %+v", gotReview, mockReview2)
 	}
 
@@ -207,7 +225,6 @@ func TestCRUD(t *testing.T) {
 	if err := db.DeleteReview(3); err == nil {
 		t.Error("expected error")
 	} else if _, ok := err.(ErrNoReview); !ok {
-		fmt.Println(err)
 		t.Error("expected ErrNoReview")
 	}
 

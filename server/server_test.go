@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/echlebek/erickson/db"
+	"github.com/echlebek/erickson/diff"
 	"github.com/echlebek/erickson/review"
 )
 
@@ -155,11 +156,13 @@ func TestServer(t *testing.T) {
 }
 
 func create(t *testing.T, url string) string {
+	files, err := diff.ParseFiles(diffTxt)
+	if err != nil {
+		t.Fatal(err)
+	}
 	r := review.R{
-		Summary: review.Summary{},
-		Revisions: []review.Revision{
-			{Patches: diffTxt},
-		},
+		Summary:   review.Summary{},
+		Revisions: []review.Revision{{Files: files}},
 	}
 	b, err := json.Marshal(r)
 	if err != nil {
