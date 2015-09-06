@@ -123,7 +123,6 @@ func ParseFiles(diff string) (files []File, err error) {
 	for _, line := range strings.Split(diff[start:], "\n") {
 		if strings.HasPrefix(line, "--- ") {
 			if len(lines) > 0 {
-				fmt.Println(len(files))
 				file, err = NewFile(lines)
 				if err != nil {
 					return
