@@ -37,11 +37,10 @@
         <h3>Create a new review by uploading a diff. It's easy!</h3>
         <form method="post" action="/reviews">
           <div class="form-group">
-            <label for="diff">Paste a diff</label>
-            <textarea class="form-control" name="diff" id="diff" rows="10"></textarea>
+            <textarea class="hidden form-control" name="diff" id="diff"></textarea>
           </div>
           <div class="form-group">
-            <label for="diff-file">Or choose a file</label>
+            <label for="diff-file">Choose a file</label>
             <input class="form-control" type="file" onchange="pasteFile(this.files[0])">
           </div>
           <div class="form-group">
