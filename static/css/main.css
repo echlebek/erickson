@@ -20,15 +20,13 @@ code {
 	background-color: inherit;
 }
 
-.code-pre {
-}
-
 .insertion {
 	color: #586e75;
 	background-color: #ccebc5;
 }
 
 .deletion {
+	color: #586e75;
 	background-color: #fbb3ad;
 }
 
@@ -39,7 +37,7 @@ code {
 
 .code-pre {
 	color: inherit;
-	font-size: 12px;
+	font-size: 11px;
 	background-color: inherit;
 	display: inline;
 	padding: 0px;
@@ -48,6 +46,12 @@ code {
 
 .unchanged {
 	color: #586e75;
+	background-color: #fdf6e3;
+}
+
+.index {
+	color: #586e75;
+	font-weight: bold;
 	background-color: #fdf6e3;
 }
 

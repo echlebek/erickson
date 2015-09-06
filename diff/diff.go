@@ -249,13 +249,17 @@ func sideBySide(r HunkRange, lines []string) (lhs, rhs []DiffLine) {
 		}
 		del, ins := deletion(lhsL), insertion(rhsL)
 		if !del && !ins {
+			lhsType, rhsType := "unchanged", "unchanged"
+			if i == 0 {
+				lhsType, rhsType = "index", "index"
+			}
 			lhs = append(lhs, DiffLine{
 				Text: lhsL,
-				Type: "unchanged",
+				Type: lhsType,
 				Line: lhsLineNum})
 			rhs = append(rhs, DiffLine{
 				Text: rhsL,
-				Type: "unchanged",
+				Type: rhsType,
 				Line: rhsLineNum})
 			delete(lhsM, i)
 			delete(rhsM, i)
