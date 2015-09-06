@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html"
 	"regexp"
 	"strconv"
 	"strings"
@@ -31,7 +30,7 @@ type File struct {
 type DiffLine struct {
 	Text string
 	Type string
-	Line *int
+	Line string
 }
 
 func (f *File) UnmarshalJSON(p []byte) error {
@@ -240,8 +239,7 @@ func sideBySide(r HunkRange, lines []string) (lhs, rhs []DiffLine) {
 			// Avoid slurping too much of the diff by using the index range
 			break
 		}
-		lhsLineNum, rhsLineNum := new(int), new(int)
-		*lhsLineNum, *rhsLineNum = lhsLineCtr, rhsLineCtr
+		lhsLineNum, rhsLineNum := strconv.Itoa(lhsLineCtr), strconv.Itoa(rhsLineCtr)
 		lhsLineCtr++
 		rhsLineCtr++
 		lhsL, okL := lhsM[i]
@@ -252,11 +250,11 @@ func sideBySide(r HunkRange, lines []string) (lhs, rhs []DiffLine) {
 		del, ins := deletion(lhsL), insertion(rhsL)
 		if !del && !ins {
 			lhs = append(lhs, DiffLine{
-				Text: html.EscapeString(lhsL),
+				Text: lhsL,
 				Type: "unchanged",
 				Line: lhsLineNum})
 			rhs = append(rhs, DiffLine{
-				Text: html.EscapeString(rhsL),
+				Text: rhsL,
 				Type: "unchanged",
 				Line: rhsLineNum})
 			delete(lhsM, i)
@@ -279,15 +277,15 @@ func sideBySide(r HunkRange, lines []string) (lhs, rhs []DiffLine) {
 				lhsType = "modification"
 				rhsType = "modification"
 			} else {
-				lhsLineNum = nil
 				lhsLineCtr--
+				lhsLineNum = ""
 			}
 			rhs = append(rhs, DiffLine{
-				Text: html.EscapeString(rhsL),
+				Text: rhsL,
 				Type: rhsType,
 				Line: rhsLineNum})
 			lhs = append(lhs, DiffLine{
-				Text: html.EscapeString(deletn),
+				Text: deletn,
 				Type: lhsType,
 				Line: lhsLineNum})
 		} else if del && !ins {
@@ -307,15 +305,15 @@ func sideBySide(r HunkRange, lines []string) (lhs, rhs []DiffLine) {
 				rhsType = "modification"
 				lhsType = "modification"
 			} else {
-				rhsLineNum = nil
 				rhsLineCtr--
+				rhsLineNum = ""
 			}
 			lhs = append(lhs, DiffLine{
-				Text: html.EscapeString(lhsL),
+				Text: lhsL,
 				Type: lhsType,
 				Line: lhsLineNum})
 			rhs = append(rhs, DiffLine{
-				Text: html.EscapeString(insertn),
+				Text: insertn,
 				Type: rhsType,
 				Line: rhsLineNum})
 		}

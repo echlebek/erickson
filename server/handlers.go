@@ -2,13 +2,11 @@ package server
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
-	"path/filepath"
 	"sort"
-	"text/template"
 	"time"
 
 	"github.com/echlebek/erickson/diff"
@@ -16,13 +14,24 @@ import (
 	"github.com/echlebek/erickson/review"
 )
 
-func home(ctx context, w http.ResponseWriter, req *http.Request) {
-	tmpl, err := template.ParseFiles("./static/html/reviews.html")
+var (
+	reviewsTmpl *template.Template
+	reviewTmpl  *template.Template
+)
+
+func init() {
+	var err error
+	reviewsTmpl, err = template.ParseFiles("./static/html/reviews.html")
 	if err != nil {
-		log.Println(err)
-		jsonError(w, errors.New("couldn't load resources"), 500)
-		return
+		panic(err)
 	}
+	reviewTmpl, err = template.ParseFiles("./static/html/review.html")
+	if err != nil {
+		panic(err)
+	}
+}
+
+func home(ctx context, w http.ResponseWriter, req *http.Request) {
 	sums, err := ctx.db.GetSummaries()
 	if err != nil {
 		jsonError(w, err, 500)
@@ -38,7 +47,7 @@ func home(ctx context, w http.ResponseWriter, req *http.Request) {
 	wrap := struct {
 		Reviews []resource.ReviewSummary
 	}{res}
-	if err := tmpl.Execute(w, wrap); err != nil {
+	if err := reviewsTmpl.Execute(w, wrap); err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
 		return
@@ -56,19 +65,12 @@ func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	tmpl, err := template.ParseFiles(filepath.Join(ctx.fsRoot, "static/html/review.html"))
-	if err != nil {
-		log.Println(err)
-		w.WriteHeader(500)
-		return
-	}
-
 	res := resource.Review{
 		R:                review,
 		SelectedRevision: ctx.revision,
 		URL:              ctx.reviewURL(),
 	}
-	if err := tmpl.Execute(w, res); err != nil {
+	if err := reviewTmpl.Execute(w, res); err != nil {
 		log.Println(err)
 		return
 	}
