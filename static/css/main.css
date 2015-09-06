@@ -1,3 +1,8 @@
+body {
+	background-color: #eee8d5;
+	color: #073642;
+}
+
 #diff tr:selected {
 	opacity: .7;
 }
@@ -16,23 +21,34 @@ code {
 }
 
 .code-pre {
-	color: inherit;
 }
 
 .insertion {
-	background-color: #7FFFD4;
+	color: #586e75;
+	background-color: #ccebc5;
 }
 
 .deletion {
-	background-color: #FA8072;
+	background-color: #fbb3ad;
 }
 
 .modification {
-	background-color: #FDFCDC;
+	color: #586e75;
+	background-color: #eee8d5;
+}
+
+.code-pre {
+	color: inherit;
+	font-size: 12px;
+	background-color: inherit;
+	display: inline;
+	padding: 0px;
+	border: 0px;
 }
 
 .unchanged {
-	background-color: white;
+	color: #586e75;
+	background-color: #fdf6e3;
 }
 
 .line {
@@ -40,13 +56,25 @@ code {
 }
 
 .lineno {
-	color: grey;
-	background-color: #EDF8FB;
+	color: #586e75;
+	background-color: #eee8d5;
 	width: 3%;
-	opacity: 50%;
 }
 
 .spanner {
-	background-color: #EDF8FB;
+	background-color: #eee8d5;
 	font-weight: bold;
+}
+
+.fileheader {
+	background-color: #93a1a1;
+	font-weight: bold;
+}
+
+.headertxt {
+	color: #002b36;
+}
+
+.jumbotron {
+	background-color: #eee8d5;
 }
