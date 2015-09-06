@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"html/template"
 	"time"
 
 	"github.com/echlebek/erickson/review"
@@ -16,6 +17,7 @@ type Review struct {
 	review.R
 	SelectedRevision int
 	URL              string
+	Header           template.HTML
 }
 
 // CSS label class will be rendered according to the status

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"sort"
@@ -17,6 +18,7 @@ import (
 var (
 	reviewsTmpl *template.Template
 	reviewTmpl  *template.Template
+	headerHTML  template.HTML
 )
 
 func init() {
@@ -29,6 +31,11 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	b, err := ioutil.ReadFile("./static/html/header.html")
+	if err != nil {
+		panic(err)
+	}
+	headerHTML = template.HTML(b)
 }
 
 func home(ctx context, w http.ResponseWriter, req *http.Request) {
@@ -46,7 +53,8 @@ func home(ctx context, w http.ResponseWriter, req *http.Request) {
 	sort.Sort(resource.SummaryBySubmitTime(res))
 	wrap := struct {
 		Reviews []resource.ReviewSummary
-	}{res}
+		Header  template.HTML
+	}{res, headerHTML}
 	if err := reviewsTmpl.Execute(w, wrap); err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
@@ -69,6 +77,7 @@ func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
 		R:                review,
 		SelectedRevision: ctx.revision,
 		URL:              ctx.reviewURL(),
+		Header:           headerHTML,
 	}
 	if err := reviewTmpl.Execute(w, res); err != nil {
 		log.Println(err)
