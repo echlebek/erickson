@@ -2,14 +2,12 @@
 <html lang="en">
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-    <!-- Optional theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
-    <!-- Latest compiled and minified JavaScript -->
-    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap-theme.min.css">
     <link rel="stylesheet" href="/static/css/main.css">
+
+    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
     <script src="/static/js/main.js"></script>
   </head>
   <body>
@@ -48,10 +46,10 @@
       <h3>Revision {{ $r }}</h3>
       {{ range $i, $f := $revision.Files }}
       <table style="width: 100%; display: table; border-width: thin; border-style: solid;" class="table table-condensed" id="diff">
-        <td class="spanner"></td>
+        <td class="lineno"></td>
         <td class="fileheader"><pre class="blue code-pre"><code>--- {{ $f.OldName }}</code></pre></td>
         <td class="fileheader"><pre class="blue code-pre"><code>+++ {{ $f.NewName }}</code></pre></td>
-        <td class="spanner"></td>
+        <td class="lineno"></td>
         {{ range $j, $hunk := $f.Hunks }}
         {{ range $k, $lhs := $hunk.LHS }}
         <tr style="padding: 0px; border: none">
@@ -70,10 +68,10 @@
         </tr>
         {{ end }}
         <tr>
-          <td class="spanner"><pre class="code-pre"><code>  &#10714;</code></pre></td>
+          <td class="lineno"><pre class="code-pre"><code>  &#10714;</code></pre></td>
           <td class="line unchanged"></td>
           <td class="line unchanged"></td>
-          <td class="spanner"><pre class="code-pre"><code>  &#10715;</code></pre></td>
+          <td class="lineno"><pre class="code-pre"><code>  &#10715;</code></pre></td>
         </tr>
         {{ end }}
       </table>
