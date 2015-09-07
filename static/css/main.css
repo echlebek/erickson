@@ -12,26 +12,23 @@ body {
 	border: none;
 }
 
-::selection { background: transparent; }
-::-moz-selection { background: transparent; }
-
 code {
 	tab-size: 4;
 	background-color: inherit;
 }
 
 .insertion {
-	color: #586e75;
+	color: #002b36;
 	background-color: #ccebc5;
 }
 
 .deletion {
-	color: #586e75;
+	color: #002b36;
 	background-color: #fbb3ad;
 }
 
 .modification {
-	color: #586e75;
+	color: #002b36;
 	background-color: #eee8d5;
 }
 
@@ -51,6 +48,7 @@ code {
 
 .index {
 	color: #586e75;
+	font-style: italic;
 	font-weight: bold;
 	background-color: #fdf6e3;
 }
@@ -63,6 +61,7 @@ code {
 	color: #586e75;
 	background-color: #eee8d5;
 	width: 3%;
+	font-style: italic;
 }
 
 .spanner {
@@ -81,4 +80,53 @@ code {
 
 .jumbotron {
 	background-color: #eee8d5;
+}
+
+.btn-submit {
+	background-color: #002b36;
+	color: #ccebc5;
+	border-color: #ccebc5;
+	border-width: thin;
+}
+
+.btn-submit:hover {
+	color: white;
+}
+
+.btn-submit:focus {
+	color: #ccebc5;
+}
+
+.btn-discard {
+	background-color: #002b36;
+	color: #fbb3ad;
+	border-color: #fbb3ad;
+	border-width: thin;
+}
+
+.btn-discard:hover{
+	color: white;
+}
+
+.btn-reopen {
+	border-color: #268bd2;
+	border-width: thin;
+	background-color: #002b36;
+	color: #268bd2;
+}
+
+.btn-reopen:hover {
+	color: white;
+}
+
+.ericksonnav {
+	background-color: #002b36;
+	background: solid;
+}
+
+.btn-submit2 {
+	background-color: #eee8d5;
+	color: black;
+	border-color: black;
+	border-width: thin;
 }
