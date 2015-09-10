@@ -23,3 +23,10 @@ func TestParseFiles(t *testing.T) {
 		t.Errorf("wrong number of files: got %d, want %d", got, want)
 	}
 }
+
+func TestParseEmpty(t *testing.T) {
+	_, err := ParseFiles("")
+	if err == nil {
+		t.Errorf("expected an error")
+	}
+}

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"sort"
@@ -13,30 +12,8 @@ import (
 	"github.com/echlebek/erickson/diff"
 	"github.com/echlebek/erickson/resource"
 	"github.com/echlebek/erickson/review"
+	"github.com/echlebek/erickson/templates"
 )
-
-var (
-	reviewsTmpl *template.Template
-	reviewTmpl  *template.Template
-	headerHTML  template.HTML
-)
-
-func init() {
-	var err error
-	reviewsTmpl, err = template.ParseFiles("./static/html/reviews.html")
-	if err != nil {
-		panic(err)
-	}
-	reviewTmpl, err = template.ParseFiles("./static/html/review.html")
-	if err != nil {
-		panic(err)
-	}
-	b, err := ioutil.ReadFile("./static/html/header.html")
-	if err != nil {
-		panic(err)
-	}
-	headerHTML = template.HTML(b)
-}
 
 func home(ctx context, w http.ResponseWriter, req *http.Request) {
 	sums, err := ctx.db.GetSummaries()
@@ -54,8 +31,8 @@ func home(ctx context, w http.ResponseWriter, req *http.Request) {
 	wrap := struct {
 		Reviews []resource.ReviewSummary
 		Header  template.HTML
-	}{res, headerHTML}
-	if err := reviewsTmpl.Execute(w, wrap); err != nil {
+	}{res, templates.HeaderHTML}
+	if err := templates.ReviewsTmpl.Execute(w, wrap); err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
 		return
@@ -77,9 +54,9 @@ func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
 		R:                review,
 		SelectedRevision: ctx.revision,
 		URL:              ctx.reviewURL(),
-		Header:           headerHTML,
+		Header:           templates.HeaderHTML,
 	}
-	if err := reviewTmpl.Execute(w, res); err != nil {
+	if err := templates.ReviewTmpl.Execute(w, res); err != nil {
 		log.Println(err)
 		return
 	}

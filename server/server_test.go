@@ -213,7 +213,6 @@ func update(t *testing.T, url string) {
 }
 
 func annotate(t *testing.T, url string) {
-	fmt.Println(url)
 	anno := review.Annotation{
 		FileNumber: 0,
 		LineNumber: 123,
