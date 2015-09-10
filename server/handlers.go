@@ -31,7 +31,7 @@ func home(ctx context, w http.ResponseWriter, req *http.Request) {
 	wrap := struct {
 		Reviews []resource.ReviewSummary
 		Header  template.HTML
-	}{res, templates.HeaderHTML}
+	}{res, templates.HeaderHTML.HTML()}
 	if err := templates.ReviewsTmpl.Execute(w, wrap); err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
@@ -54,7 +54,7 @@ func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
 		R:                review,
 		SelectedRevision: ctx.revision,
 		URL:              ctx.reviewURL(),
-		Header:           templates.HeaderHTML,
+		Header:           templates.HeaderHTML.HTML(),
 	}
 	if err := templates.ReviewTmpl.Execute(w, res); err != nil {
 		log.Println(err)
