@@ -10,8 +10,8 @@
 	<script src="/assets/{{ $k }}"></script>
 	{{ end }}
   </head>
-  <body>
-  	<nav class="clearfix white bg-black">
+  <body class="bg-base01">
+  	<nav class="clearfix white bg-base03">
 	  <div class="sm-col">
 		<a class="btn aqua mt1 mb1 ml1" href="/">Erickson Code Review</a>
 		<a class="btn aqua mt1 mb1" href="">Review {{.ID}} ({{.Status}})</a>
@@ -27,16 +27,16 @@
 	</nav>
 	<div class="code-tables">
       {{ range $r, $revision := .R.Revisions }}
-      <h3>Revision {{ $r }}</h3>
+	  <a href="#/rev/{{ $r }}" class="btn btn-outline base3 bg-lighten-2">Revision {{ $r }}</a>
       {{ range $i, $f := $revision.Files }}
-      <table style="width: 100%; display: table; border-width: thin; border-style: solid;" class="table table-condensed mb1" id="diff">
+      <table class="border rounded table table-condensed mb1 mt1" id="diff">
         <td class="lineno"></td>
         <td class="fileheader"><pre class="blue code-pre"><code>--- {{ $f.OldName }}</code></pre></td>
         <td class="lineno"></td>
         <td class="fileheader"><pre class="blue code-pre"><code>+++ {{ $f.NewName }}</code></pre></td>
         {{ range $j, $hunk := $f.Hunks }}
         {{ range $k, $lhs := $hunk.LHS }}
-        <tr style="padding: 0px; border: none">
+        <tr>
           <td class="lineno {{ (index $hunk.LHS $k).Type }}">
             <pre class="code-pre"><code> {{ (index $hunk.LHS $k).Line }}</code></pre>
           </td>

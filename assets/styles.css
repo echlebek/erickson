@@ -6,9 +6,54 @@ pre {
     word-wrap: break-word;       /* Internet Explorer 5.5+ */
 }
 
-body {
-	background-color: #eee8d5;
-	color: #073642;
+/* Solarized Colours */
+.bg-base03{
+    background-color: #002b36;
+}
+.bg-base02{
+    background-color: #073642;
+}
+.bg-base01{
+    background-color: #586e75;
+}
+.bg-base00{
+    background-color: #657b83;
+}
+.bg-base0{
+     background-color: #839496;
+}
+.bg-base1{
+     background-color: #93a1a1;
+}
+.bg-base2{
+     background-color: #eee8d5;
+}
+.bg-base3{
+     background-color: #fdf6e3;
+}
+.base03{
+    color: #002b36;
+}
+.base02{
+    color: #073642;
+}
+.base01{
+    color: #586e75;
+}
+.base00{
+    color: #657b83;
+}
+.base0{
+     color: #839496;
+}
+.base1{
+     color: #93a1a1;
+}
+.base2{
+     color: #eee8d5;
+}
+.base3{
+     color: #fdf6e3;
 }
 
 .hidden {
@@ -17,11 +62,18 @@ body {
 
 #diff tr {
 	line-height: 13px;
+	padding: 0px;
+	border: none;
 }
 
 #diff td {
 	padding: 0px;
 	border: none;
+}
+
+#diff {
+	width: 100%;
+	display: table;
 }
 
 code {
@@ -58,6 +110,10 @@ code {
 	background-color: #fdf6e3;
 }
 
+.bold {
+	font-weight: bold;
+}
+
 .index {
 	color: #586e75;
 	font-style: italic;
@@ -90,19 +146,11 @@ code {
 	color: #002b36;
 }
 
-.jumbotron {
-	background-color: #eee8d5;
-}
-
 .btn-submit {
 	background-color: #002b36;
 	color: #ccebc5;
 	border-color: #ccebc5;
 	border-width: thin;
-}
-
-.btn-submit:focus {
-	color: #ccebc5;
 }
 
 .btn-discard {
