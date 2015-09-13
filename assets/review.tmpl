@@ -32,8 +32,8 @@
       <table style="width: 100%; display: table; border-width: thin; border-style: solid;" class="table table-condensed mb1" id="diff">
         <td class="lineno"></td>
         <td class="fileheader"><pre class="blue code-pre"><code>--- {{ $f.OldName }}</code></pre></td>
-        <td class="fileheader"><pre class="blue code-pre"><code>+++ {{ $f.NewName }}</code></pre></td>
         <td class="lineno"></td>
+        <td class="fileheader"><pre class="blue code-pre"><code>+++ {{ $f.NewName }}</code></pre></td>
         {{ range $j, $hunk := $f.Hunks }}
         {{ range $k, $lhs := $hunk.LHS }}
         <tr style="padding: 0px; border: none">
@@ -43,19 +43,19 @@
           <td class="line {{ (index $hunk.LHS $k).Type }}">
             <pre class="code-pre"><code> {{ (index $hunk.LHS $k).Text }}</code></pre>
           </td>
-          <td class="line {{ (index $hunk.RHS $k).Type }}">
-            <pre class="code-pre"><code> {{(index $hunk.RHS $k).Text }}</code></pre>
-          </td>
           <td class="lineno {{ (index $hunk.RHS $k).Type }}">
             <pre class="code-pre"><code> {{ (index $hunk.RHS $k).Line }}</code></pre>
+          </td>
+          <td class="line {{ (index $hunk.RHS $k).Type }}">
+            <pre class="code-pre"><code> {{(index $hunk.RHS $k).Text }}</code></pre>
           </td>
         </tr>
         {{ end }}
         <tr>
           <td class="lineno"><pre class="code-pre"><code>  &#10714;</code></pre></td>
           <td class="line unchanged"></td>
-          <td class="line unchanged"></td>
           <td class="lineno"><pre class="code-pre"><code>  &#10715;</code></pre></td>
+          <td class="line unchanged"></td>
         </tr>
         {{ end }}
       </table>
