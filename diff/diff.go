@@ -240,9 +240,12 @@ func sideBySide(r HunkRange, lines []string) (lhs, rhs []DiffLine) {
 			// Avoid slurping too much of the diff by using the index range
 			break
 		}
-		lhsLineNum, rhsLineNum := strconv.Itoa(lhsLineCtr), strconv.Itoa(rhsLineCtr)
-		lhsLineCtr++
-		rhsLineCtr++
+		var lhsLineNum, rhsLineNum string
+		if !strings.HasPrefix(lines[i], "@@") {
+			lhsLineNum, rhsLineNum = strconv.Itoa(lhsLineCtr), strconv.Itoa(rhsLineCtr)
+			lhsLineCtr++
+			rhsLineCtr++
+		}
 		lhsL, okL := lhsM[i]
 		rhsL, okR := rhsM[i]
 		if !(okL || okR) {
