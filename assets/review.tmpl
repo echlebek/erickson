@@ -29,7 +29,7 @@
       {{ range $r, $revision := .R.Revisions }}
       <h3>Revision {{ $r }}</h3>
       {{ range $i, $f := $revision.Files }}
-      <table style="width: 100%; display: table; border-width: thin; border-style: solid;" class="table table-condensed" id="diff">
+      <table style="width: 100%; display: table; border-width: thin; border-style: solid;" class="table table-condensed mb1" id="diff">
         <td class="lineno"></td>
         <td class="fileheader"><pre class="blue code-pre"><code>--- {{ $f.OldName }}</code></pre></td>
         <td class="fileheader"><pre class="blue code-pre"><code>+++ {{ $f.NewName }}</code></pre></td>
