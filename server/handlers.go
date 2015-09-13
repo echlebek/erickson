@@ -3,16 +3,15 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"sort"
 	"time"
 
+	"github.com/echlebek/erickson/assets"
 	"github.com/echlebek/erickson/diff"
 	"github.com/echlebek/erickson/resource"
 	"github.com/echlebek/erickson/review"
-	"github.com/echlebek/erickson/templates"
 )
 
 func home(ctx context, w http.ResponseWriter, req *http.Request) {
@@ -29,10 +28,11 @@ func home(ctx context, w http.ResponseWriter, req *http.Request) {
 	}
 	sort.Sort(resource.SummaryBySubmitTime(res))
 	wrap := struct {
-		Reviews []resource.ReviewSummary
-		Header  template.HTML
-	}{res, templates.HeaderHTML.HTML()}
-	if err := templates.ReviewsTmpl.Execute(w, wrap); err != nil {
+		Reviews     []resource.ReviewSummary
+		Stylesheets map[string]http.Handler
+		Scripts     map[string]http.Handler
+	}{res, assets.StylesheetHandlers, assets.ScriptHandlers}
+	if err := assets.Templates["reviews.html"].Execute(w, wrap); err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
 		return
@@ -54,9 +54,13 @@ func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
 		R:                review,
 		SelectedRevision: ctx.revision,
 		URL:              ctx.reviewURL(),
-		Header:           templates.HeaderHTML.HTML(),
 	}
-	if err := templates.ReviewTmpl.Execute(w, res); err != nil {
+	wrap := struct {
+		resource.Review
+		Stylesheets map[string]http.Handler
+		Scripts     map[string]http.Handler
+	}{res, assets.StylesheetHandlers, assets.ScriptHandlers}
+	if err := assets.Templates["review.html"].Execute(w, wrap); err != nil {
 		log.Println(err)
 		return
 	}

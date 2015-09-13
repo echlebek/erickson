@@ -1,46 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    {{ .Header }}
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	{{ range $k, $v := .Stylesheets }}
+	<link rel="stylesheet" href="/assets/{{ $k }}">
+	{{ end }}
+
+	{{ range $k, $v := .Scripts }}
+	<script src="/assets/{{ $k }}"></script>
+	{{ end }}
   </head>
   <body>
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-    <div class="container">
-      <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-          <span class="sr-only">Toggle navigation</span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="/">Erickson Code Review</a>
+  	<nav class="clearfix white bg-black">
+	  <div class="sm-col">
+		<a class="btn aqua mt1 mb1 ml1" href="/">Erickson Code Review</a>
       </div>
       <div id="navbar" class="navbar-collapse collapse">
-        <div class="navbar-form navbar-right">
-          <button onClick="createReview()" class="btn btn-submit">Create Review</button>
-          <button onClick="cancelReview()" class="btn btn-discard hidden" id="cancel-button">Cancel</button>
+        <div class="sm-col-right">
+          <button onClick="createReview()" class="btn btn-outline mb1 mt1 mr1 btn-submit">Create Review</button>
+          <button onClick="cancelReview()" class="btn btn-outline mb1 mt1 mr1 btn-discard hidden" id="cancel-button">Cancel</button>
         </div>
       </div>
-    </div>
     </nav>
     <div class="jumbotron">
       <div class="container create-review hidden" id="create-review">
         <h3>Create a new review by uploading a diff. It's easy!</h3>
         <form method="post" action="/reviews">
           <div class="form-group">
-            <textarea class="hidden form-control" name="diff" id="diff"></textarea>
+            <textarea class="hidden" name="diff" id="diff"></textarea>
           </div>
-          <div class="form-group">
-            <label for="diff-file">Choose a file</label>
+          <div class="flex">
             <input class="form-control" type="file" onchange="pasteFile(this.files[0])">
           </div>
           <div class="form-group">
             <label>Tell me a bit about the review, and yourself</label>
-            <input class="form-control" type="text" name="commitmsg" placeholder="Commit Message">
-            <input class="form-control" type="text" name="username" placeholder="User Name">
-            <input class="form-control" type="text" name="repository" placeholder="Repository Name">
+			<div><input class="block col-12 field" type="text" name="commitmsg" placeholder="Commit Message"></div>
+            <input class="block col-12 field" type="text" name="username" placeholder="User Name">
+            <input class="block col-12 field" type="text" name="repository" placeholder="Repository Name">
           </div>
-          <button type="submit" class="btn btn-submit2">Submit</button> 
+          <button type="submit" class="btn btn-outline">Submit</button> 
         </form>
       </div>
       <div class="container">

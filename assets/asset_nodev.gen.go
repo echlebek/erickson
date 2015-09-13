@@ -2,7 +2,7 @@
 
 // +build !dev
 
-package templates
+package assets
 
 import (
 	"encoding/base64"

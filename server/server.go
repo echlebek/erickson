@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/echlebek/erickson/assets"
 	"github.com/echlebek/erickson/db"
 	"github.com/gorilla/mux"
 )
@@ -73,8 +74,13 @@ func NewRootHandler(d db.Database, fsRoot string) *RootHandler {
 	handler := &RootHandler{Database: d, Router: r, URL: new(string), FSRoot: fsRoot}
 	ctx := context{router: r, db: d, url: handler.URL, fsRoot: fsRoot}
 
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/",
-		http.FileServer(http.Dir("static/"))))
+	for name, handler := range assets.StylesheetHandlers {
+		r.Handle("/assets/"+name, handler).Methods("GET")
+	}
+
+	for name, handler := range assets.ScriptHandlers {
+		r.Handle("/assets/"+name, handler).Methods("GET")
+	}
 
 	r.HandleFunc("/", ctx.handler(home)).
 		Methods("GET")

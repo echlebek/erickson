@@ -1,40 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    {{ .Header }}
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	{{ range $k, $v := .Stylesheets }}
+	<link rel="stylesheet" href="/assets/{{ $k }}">
+	{{ end }}
+
+	{{ range $k, $v := .Scripts }}
+	<script src="/assets/{{ $k }}"></script>
+	{{ end }}
   </head>
   <body>
-    <nav class="ericksonnav navbar navbar-inverse navbar-fixed-top">
-    <div class="container">
-      <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-          <span class="sr-only">Toggle navigation</span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="/">Erickson Code Review</a>
-      </div>
-      <div id="navbar" class="navbar-collapse collapse">
-        <div class="navbar-form navbar-right">
-          {{ if .StatusOpen }}
-            <button onClick="submitReview()" class="btn btn-submit">Submit Review</button>
-            <button onClick="discardReview()" class="btn btn-discard">Discard Review</button>
-          {{ else }}
-            <button onClick="reopenReview()" class="btn btn-reopen">Re-open Review</button>
-          {{ end }}
-        </div>
-      </div>
-    </div>
-    </nav>
-    <div class="jumbotron">
-      <div class="container">
-        <h2>Review {{.ID}} - {{.Status}}</h2>
-        <h3>{{.CommitMsg}}</h3>
-        <div class="container container-fluid">
-      </div>
-    </div>
-    <div class="container">
+  	<nav class="clearfix white bg-black">
+	  <div class="sm-col">
+		<a class="btn aqua mt1 mb1 ml1" href="/">Erickson Code Review</a>
+		<a class="btn aqua mt1 mb1" href="">Review {{.ID}} ({{.Status}})</a>
+	  </div>
+	  <div class="sm-col-right align-middle">
+	  {{ if .StatusOpen }}
+	    <button onClick="submitReview()" class="btn btn-outline mt1 mb1 mr1 btn-submit">Submit Review</button>
+	    <button onClick="discardReview()" class="btn btn-outline mt1 mb1 mr1 btn-discard">Discard Review</button>
+	  {{ else }}
+	    <button onClick="reopenReview()" class="btn btn-outline mt1 mb1 mr1 btn-reopen">Re-open Review</button>
+	  {{ end }}
+	  </div>
+	</nav>
+	<div class="code-tables">
       {{ range $r, $revision := .R.Revisions }}
       <h3>Revision {{ $r }}</h3>
       {{ range $i, $f := $revision.Files }}

@@ -1,10 +1,22 @@
+pre {
+    white-space: pre-wrap;       /* CSS 3 */
+    white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+    white-space: -pre-wrap;      /* Opera 4-6 */
+    white-space: -o-pre-wrap;    /* Opera 7 */
+    word-wrap: break-word;       /* Internet Explorer 5.5+ */
+}
+
 body {
 	background-color: #eee8d5;
 	color: #073642;
 }
 
-#diff tr:selected {
-	opacity: .7;
+.hidden {
+	display: none;
+}
+
+#diff tr {
+	line-height: 13px;
 }
 
 #diff td {
@@ -89,10 +101,6 @@ code {
 	border-width: thin;
 }
 
-.btn-submit:hover {
-	color: white;
-}
-
 .btn-submit:focus {
 	color: #ccebc5;
 }
@@ -104,10 +112,6 @@ code {
 	border-width: thin;
 }
 
-.btn-discard:hover{
-	color: white;
-}
-
 .btn-reopen {
 	border-color: #268bd2;
 	border-width: thin;
@@ -115,18 +119,6 @@ code {
 	color: #268bd2;
 }
 
-.btn-reopen:hover {
-	color: white;
-}
-
-.ericksonnav {
-	background-color: #002b36;
-	background: solid;
-}
-
-.btn-submit2 {
-	background-color: #eee8d5;
-	color: black;
-	border-color: black;
-	border-width: thin;
+.code-tables {
+	padding: 10px;
 }

@@ -2,7 +2,7 @@
 
 // +build dev
 
-package templates
+package assets
 
 import (
 	"go/build"
@@ -24,7 +24,7 @@ func (a asset) init() asset {
 
 func (a asset) importPath() string {
 	// filled at code gen time
-	return "github.com/echlebek/erickson/templates"
+	return "github.com/echlebek/erickson/assets"
 }
 
 func (a asset) Open() (*os.File, error) {
