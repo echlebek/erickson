@@ -10,6 +10,7 @@ or broken.
 
 Project goals:
 * Dead-simple setup that doesn't require integration with other services.
+* A standalone binary that doesn't require an installer or asset files.
 * A simple, lightweight UI that requires minimal JS.
 * A small feature-set that is robust and reliable.
 
