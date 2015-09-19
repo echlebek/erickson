@@ -43,7 +43,8 @@ type Revision struct {
 // An Annotation is a message that corresponds to a file and line number in a
 // patch set.
 type Annotation struct {
-	FileNumber int    `json:"hunkNumber"`
+	FileNumber int    `json:"fileNumber"`
+	HunkNumber int    `json:"hunkNumber"`
 	LineNumber int    `json:"lineNumber"`
-	Message    string `json:"message"`
+	Comment    string `json:"comment"`
 }

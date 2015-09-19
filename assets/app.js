@@ -44,6 +44,20 @@ function patchReview(status) {
   });
 }
 
+function patchRevision(annotation) {
+  $.ajax({
+    headers: {
+      "Content-Type": "application/json"
+    },
+    url: window.location,
+    type: "PATCH",
+    data: JSON.stringify(annotation),
+    complete: function() {
+      window.location.reload();
+    }
+  });
+}
+
 function pasteFile(file) {
   var reader = new FileReader();
   reader.onload = function(e) {
@@ -52,36 +66,65 @@ function pasteFile(file) {
   reader.readAsText(file);
 }
 
-// inclusive selection object
-var sel = {
-  start: null,
-  stop: null,
-};
+function annotate(fileName, revision, hunk, line) {
+  var req = {
+    fileName: fileName,
+    hunk: hunk,
+    line: line,
+    message: message
+  };
+  console.log(req);
+  patchRevision(req);
+}
 
 window.onload = function() {
   // Show only the selected reviews
   toggleShowAll();
+  $(document).on("click", ".lineno-lhs", function () {
+    showAnnotate(this);
+  });
 
-  // Install event handlers
-  $("table").on("mousedown", function (e) {
-    var tr = $(e.target).parents("tr")[0];
-    if (!!tr) {
-      sel.start = tr.rowIndex;
-    }
-    console.log(sel.start);
+  $(document).on("click", ".lineno-rhs", function () {
+    showAnnotate(this);
   });
-  $("table").on("mouseup", function (e) {
-    var tr = $(e.target).parents("tr")[0];
-    if (!!tr) {
-      sel.stop = tr.rowIndex;
-    } else {
-      sel.stop = sel.start;
-    }
-    if (sel.start < sel.stop) {
-      var tmp = sel.start;
-      sel.start = sel.stop;
-      sel.stop = tmp;
-    }
-    console.log(sel.stop);
-  });
+}
+
+function showAnnotate(td) {
+  cancelAnnotate(); // If another annotate dialog is visible, remove it
+
+  // Add the annotate form after the selected row
+  var form = $(".annotate-form");
+  form.show();
+  var tr = $(td).parent();
+  tr.after(form);
+  form.wrap('<tr><td colspan="4"></td></tr>');
+
+  // Put some descriptive information into the annotate form
+  var tds = $(td).parent().children("td");
+  var lineTd = $(tds[2]);
+  var diffTd = $(tds[3]);
+  var diffText = diffTd.find("code").text();
+  var lineText = lineTd.find("code").text();
+  form.find(".line-text").text(lineText + ": " + diffText);
+
+  // Stash some data in the comment element for submitting to the server
+  var idParts = tr.attr("id").split("-");
+  $("#comment").data("fileNumber", int(idParts[1]));
+  $("#comment").data("hunkNumber", int(idParts[2]));
+  $("#comment").data("lineNumber", int(idParts[3]));
+}
+
+function cancelAnnotate() {
+  $(".annotate-form").hide();
+}
+
+function postComment() {
+  var comment = $("#comment");
+  var annotation = {
+    fileNumber: comment.data("fileNumber"),
+    hunkNumber: comment.data("hunkNumber"),
+    lineNumber: comment.data("lineNumber"),
+    comment: comment.text()
+  };
+  patchRevision(annotation);
 }

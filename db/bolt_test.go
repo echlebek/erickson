@@ -61,7 +61,7 @@ func init() {
 			{
 				Files: files,
 				Annotations: []review.Annotation{
-					{FileNumber: 0, LineNumber: 0, Message: "foo"},
+					{FileNumber: 0, LineNumber: 0, HunkNumber: 0, Comment: "foo"},
 				},
 			},
 		},
@@ -206,7 +206,8 @@ func TestCRUD(t *testing.T) {
 	anno := review.Annotation{
 		FileNumber: 0,
 		LineNumber: 0,
-		Message:    "Fitter, happier more productive",
+		HunkNumber: 0,
+		Comment:    "Fitter, happier more productive",
 	}
 	if err := db.AddAnnotation(2, 0, anno); err != nil {
 		t.Fatal(err)

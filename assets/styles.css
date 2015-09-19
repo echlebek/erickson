@@ -114,6 +114,10 @@ code {
 	font-weight: bold;
 }
 
+.font-14 {
+	font-size: 14px;
+}
+
 .index {
 	color: #586e75;
 	font-style: italic;
@@ -130,6 +134,10 @@ code {
 	background-color: #eee8d5;
 	width: 3%;
 	font-style: italic;
+}
+
+.lineno:hover {
+    background-color: #002b36;
 }
 
 .spanner {
@@ -169,4 +177,8 @@ code {
 
 .code-tables {
 	padding: 10px;
+}
+
+.monospace {
+	font-family: monospace;
 }
