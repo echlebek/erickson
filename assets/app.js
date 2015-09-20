@@ -66,17 +66,6 @@ function pasteFile(file) {
   reader.readAsText(file);
 }
 
-function annotate(fileName, revision, hunk, line) {
-  var req = {
-    fileName: fileName,
-    hunk: hunk,
-    line: line,
-    message: message
-  };
-  console.log(req);
-  patchRevision(req);
-}
-
 window.onload = function() {
   // Show only the selected reviews
   toggleShowAll();
