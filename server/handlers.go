@@ -77,19 +77,45 @@ func postReview(ctx context, w http.ResponseWriter, req *http.Request) {
 
 func patchReview(ctx context, w http.ResponseWriter, req *http.Request) {
 	p := struct {
-		Status string `json:"status"`
+		Status     *string            `json:"status"`
+		Annotation *review.Annotation `json:"annotation"`
 	}{}
 	if err := json.NewDecoder(req.Body).Decode(&p); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	review, err := ctx.db.GetReview(ctx.review)
+	r, err := ctx.db.GetReview(ctx.review)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("review %d not found", ctx.review), http.StatusNotFound)
 		return
 	}
-	review.Summary.Status = p.Status
-	ctx.db.SetSummary(ctx.review, review.Summary)
+	if p.Status != nil {
+		switch *p.Status {
+		case review.Open, review.Submitted, review.Discarded:
+			break
+		default:
+			http.Error(w, fmt.Sprintf("invalid status: %q", p.Status), http.StatusBadRequest)
+			return
+		}
+		r.Summary.Status = *p.Status
+		if err := ctx.db.SetSummary(ctx.review, r.Summary); err != nil {
+			log.Println(err)
+			http.Error(w, "database error", http.StatusInternalServerError)
+			return
+		}
+	}
+	if p.Annotation != nil {
+		if len(r.Revisions) < 1 {
+			http.Error(w, "no revisions", http.StatusBadRequest)
+			return
+		}
+		r.Revisions[0].Annotate(*p.Annotation)
+		if err := ctx.db.UpdateRevision(ctx.review, 0, r.Revisions[0]); err != nil {
+			log.Println(err)
+			http.Error(w, "database error", http.StatusInternalServerError)
+			return
+		}
+	}
 	http.Redirect(w, req, "/", 303)
 }
 
@@ -181,8 +207,21 @@ func patchRevision(ctx context, w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	if err := ctx.db.AddAnnotation(ctx.review, ctx.revision, anno); err != nil {
-		http.Error(w, "can't annotate review", 500)
+	review, err := ctx.db.GetReview(ctx.review)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "can't get revision", 500)
+		return
+	}
+	if ctx.revision >= len(review.Revisions) {
+		http.Error(w, "no such revision", 400)
+		return
+	}
+	revision := review.Revisions[ctx.revision]
+	revision.Annotations = append(revision.Annotations, anno)
+	if err := ctx.db.UpdateRevision(ctx.review, ctx.revision, revision); err != nil {
+		log.Println(err)
+		http.Error(w, "can't update review", 500)
 		return
 	}
 }

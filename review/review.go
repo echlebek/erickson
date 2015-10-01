@@ -34,17 +34,35 @@ type Summary struct {
 	Status      string    `json:"status"`
 }
 
-// A revision is a set of diff.Files coupled with annotations.
+// A revision is a set of diff.Files with corresponding annotations.
+// Annotations are a list of comments on a given line of the diff,
+// identified by file, hunk and line-number indices.
 type Revision struct {
 	Files       []diff.File  `json:"files"`
 	Annotations []Annotation `json:"annotations"`
 }
 
-// An Annotation is a message that corresponds to a file and line number in a
-// patch set.
+// Annotate annotates a file at a particular hunk and line number.
+func (r *Revision) Annotate(a Annotation) {
+	r.Annotations = append(r.Annotations, a)
+}
+
 type Annotation struct {
-	FileNumber int    `json:"fileNumber"`
-	HunkNumber int    `json:"hunkNumber"`
-	LineNumber int    `json:"lineNumber"`
-	Comment    string `json:"comment"`
+	File    int    `json:"file"`
+	Hunk    int    `json:"hunk"`
+	Line    int    `json:"line"`
+	Comment string `json:"comment"`
+	User    string `json:"user"`
+}
+
+// GetAnnotation gets the annotation at the index provided.
+// If none exists, it returns an empty slice.
+func (r Revision) GetAnnotations(file, hunk, line int) []Annotation {
+	var result []Annotation
+	for _, a := range r.Annotations {
+		if a.File == file && a.Hunk == hunk && a.Line == line {
+			result = append(result, a)
+		}
+	}
+	return result
 }

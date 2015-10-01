@@ -56,6 +56,15 @@ pre {
      color: #fdf6e3;
 }
 
+/* My own colours */
+.green {
+	color: #ccebc5;
+}
+
+.red {
+	color: #fbb3ad;
+}
+
 .hidden {
 	display: none;
 }
@@ -98,7 +107,6 @@ code {
 
 .code-pre {
 	color: inherit;
-	font-size: 11px;
 	background-color: inherit;
 	display: inline;
 	padding: 0px;
@@ -142,11 +150,6 @@ code {
 
 .spanner {
 	background-color: #eee8d5;
-	font-weight: bold;
-}
-
-.fileheader {
-	background-color: #93a1a1;
 	font-weight: bold;
 }
 

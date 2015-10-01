@@ -274,21 +274,22 @@ func (db *BoltDB) AddRevision(id int, revision review.Revision) error {
 	})
 }
 
-func (db *BoltDB) AddAnnotation(id, revId int, an review.Annotation) error {
+// UpdateRevision overwrites the specified revision with a new one.
+func (db *BoltDB) UpdateRevision(id, revId int, revision review.Revision) error {
 	return db.Update(func(tx *bolt.Tx) error {
 		reviewBkt, err := getReviewBucket(tx, id)
 		if err != nil {
 			return err
 		}
-		revisionsValue := reviewBkt.Get(revisionsKey)
 		var revisions []review.Revision
+		revisionsValue := reviewBkt.Get(revisionsKey)
 		if err := json.Unmarshal(revisionsValue, &revisions); err != nil {
 			return err
 		}
 		if revId >= len(revisions) {
 			return ErrNoRevision(revId)
 		}
-		revisions[revId].Annotations = append(revisions[revId].Annotations, an)
+		revisions[revId] = revision
 		revisionsValue, err = json.Marshal(revisions)
 		if err != nil {
 			return err

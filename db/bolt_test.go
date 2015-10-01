@@ -61,7 +61,7 @@ func init() {
 			{
 				Files: files,
 				Annotations: []review.Annotation{
-					{FileNumber: 0, LineNumber: 0, HunkNumber: 0, Comment: "foo"},
+					{File: 0, Hunk: 0, Line: 0, Comment: "foo"},
 				},
 			},
 		},
@@ -204,12 +204,15 @@ func TestCRUD(t *testing.T) {
 	}
 
 	anno := review.Annotation{
-		FileNumber: 0,
-		LineNumber: 0,
-		HunkNumber: 0,
-		Comment:    "Fitter, happier more productive",
+		File:    0,
+		Hunk:    0,
+		Line:    0,
+		Comment: "Fitter, happier, more productive",
+		User:    "Fred",
 	}
-	if err := db.AddAnnotation(2, 0, anno); err != nil {
+	gotReview.Revisions[0].Annotate(anno)
+
+	if err := db.UpdateRevision(2, 0, gotReview.Revisions[0]); err != nil {
 		t.Fatal(err)
 	}
 
@@ -218,7 +221,7 @@ func TestCRUD(t *testing.T) {
 		t.Fatal(err)
 	}
 	if annotations := mr2.Revisions[0].Annotations; len(annotations) != 2 {
-		t.Errorf("wrong number of annotations: got %d, want %d", len(annotations), 1)
+		t.Errorf("wrong number of annotations: got %d, want %d", len(annotations), 2)
 	} else if annotations[1] != anno {
 		t.Errorf("wrong annotation: got %+v, want %+v", annotations[0], anno)
 	}

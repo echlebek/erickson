@@ -214,10 +214,10 @@ func update(t *testing.T, url string) {
 
 func annotate(t *testing.T, url string) {
 	anno := review.Annotation{
-		FileNumber: 0,
-		HunkNumber: 0,
-		LineNumber: 123,
-		Comment:    "I don't like this line",
+		File:    0,
+		Hunk:    0,
+		Line:    123,
+		Comment: "I don't like this line",
 	}
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(&anno); err != nil {

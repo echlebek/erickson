@@ -45,13 +45,15 @@ function patchReview(status) {
 }
 
 function patchRevision(annotation) {
+  var data = JSON.stringify(annotation);
+  console.log(data);
   $.ajax({
     headers: {
       "Content-Type": "application/json"
     },
     url: window.location,
     type: "PATCH",
-    data: JSON.stringify(annotation),
+    data: data,
     complete: function() {
       window.location.reload();
     }
@@ -98,9 +100,9 @@ function showAnnotate(td) {
 
   // Stash some data in the comment element for submitting to the server
   var idParts = tr.attr("id").split("-");
-  $("#comment").data("fileNumber", int(idParts[1]));
-  $("#comment").data("hunkNumber", int(idParts[2]));
-  $("#comment").data("lineNumber", int(idParts[3]));
+  $("#comment").data("file", Number(idParts[1]));
+  $("#comment").data("hunk", Number(idParts[2]));
+  $("#comment").data("line", Number(idParts[3]));
 }
 
 function cancelAnnotate() {
@@ -110,10 +112,11 @@ function cancelAnnotate() {
 function postComment() {
   var comment = $("#comment");
   var annotation = {
-    fileNumber: comment.data("fileNumber"),
-    hunkNumber: comment.data("hunkNumber"),
-    lineNumber: comment.data("lineNumber"),
-    comment: comment.text()
+    file: comment.data("file"),
+    hunk: comment.data("hunk"),
+    line: comment.data("line"),
+    comment: comment.val(),
+    user: "Anonymous"
   };
-  patchRevision(annotation);
+  patchRevision({annotation: annotation});
 }

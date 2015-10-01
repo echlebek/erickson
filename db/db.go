@@ -42,12 +42,12 @@ type Database interface {
 	// SetSummary sets the Summary of a Review by ID.
 	SetSummary(id int, summary review.Summary) error
 
-	// DeleteReview deletes a review.
-	DeleteReview(id int) error
-
 	// AddRevision adds a Revision to a Review.
 	AddRevision(id int, r review.Revision) error
 
-	// AddAnnotation adds an annotation to a Revision.
-	AddAnnotation(id, revId int, a review.Annotation) error
+	// UpdateRevision replaces an existing revision with the one provided.
+	UpdateRevision(id, revId int, r review.Revision) error
+
+	// DeleteReview deletes a review.
+	DeleteReview(id int) error
 }
