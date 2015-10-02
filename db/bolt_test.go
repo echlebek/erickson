@@ -68,30 +68,6 @@ func init() {
 	}
 }
 
-// TODO: define an equality function for comparing reviews that gives
-// the difference found.
-func reviewEq(r1, r2 review.R) bool {
-	if r1.Summary != r2.Summary {
-		return false
-	}
-	if len(r1.Revisions) != len(r2.Revisions) {
-		return false
-	}
-	for i := range r1.Revisions {
-		for j := range r1.Revisions[i].Files {
-			for k := range r1.Revisions[i].Files[j].Lines {
-				if r1.Revisions[i].Files[j].Lines[k] != r2.Revisions[i].Files[j].Lines[k] {
-					return false
-				}
-			}
-		}
-		if !reflect.DeepEqual(r1.Revisions[i].Annotations, r2.Revisions[i].Annotations) {
-			return false
-		}
-	}
-	return true
-}
-
 func TestMissingDB(t *testing.T) {
 	// Deliberately create a DB that is missing the necessary info.
 	tmpdir, err := ioutil.TempDir("/tmp", "erickson")
@@ -138,7 +114,7 @@ func TestCRUD(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !reviewEq(gotReview, mockReview) {
+	if !reflect.DeepEqual(gotReview, mockReview) {
 		t.Fatalf("bad review data. got %+v, want %+v", gotReview, mockReview)
 	}
 
@@ -170,7 +146,7 @@ func TestCRUD(t *testing.T) {
 
 	mockReview2.Revisions = append(mockReview2.Revisions, review.Revision{Files: files})
 
-	if !reviewEq(gotReview, mockReview2) {
+	if !reflect.DeepEqual(gotReview, mockReview2) {
 		t.Errorf("bad review data. got %+v, want %+v", gotReview, mockReview2)
 	}
 
