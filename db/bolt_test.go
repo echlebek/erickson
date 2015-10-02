@@ -114,8 +114,12 @@ func TestCRUD(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(gotReview, mockReview) {
-		t.Fatalf("bad review data. got %+v, want %+v", gotReview, mockReview)
+	if s1, s2 := gotReview.Summary, mockReview.Summary; !reflect.DeepEqual(s1, s1) {
+		t.Fatalf("bad summary data. got %+v, want %+v", s1, s2)
+	}
+
+	if r1, r2 := gotReview.Revisions, mockReview.Revisions; !reflect.DeepEqual(r1, r2) {
+		t.Fatalf("bad revision data. got %+v, want %+v", r1, r2)
 	}
 
 	mockReview2 := mockReview
@@ -146,8 +150,12 @@ func TestCRUD(t *testing.T) {
 
 	mockReview2.Revisions = append(mockReview2.Revisions, review.Revision{Files: files})
 
-	if !reflect.DeepEqual(gotReview, mockReview2) {
-		t.Errorf("bad review data. got %+v, want %+v", gotReview, mockReview2)
+	if s1, s2 := gotReview.Summary, mockReview2.Summary; !reflect.DeepEqual(s1, s1) {
+		t.Fatalf("bad summary data. got %+v, want %+v", s1, s2)
+	}
+
+	if r1, r2 := gotReview.Revisions, mockReview2.Revisions; !reflect.DeepEqual(r1, r2) {
+		t.Fatalf("bad revision data. got %+v, want %+v", r1, r2)
 	}
 
 	summaries, err := db.GetSummaries()
