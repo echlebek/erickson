@@ -15,7 +15,9 @@ Project goals:
 * A small feature-set that is robust and reliable.
 
 TODO:
-* Annotations
-* Authentication
-* TLS
+* Write a command-line tool for submitting and updating reviews
+* Figure out why tests are failing on Travis CI
+* Add more support for revisions
+* Consider removing jQuery
+* Improve test coverage
 * SCM-specific tools
