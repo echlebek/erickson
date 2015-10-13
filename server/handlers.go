@@ -3,21 +3,27 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/echlebek/erickson/assets"
 	"github.com/echlebek/erickson/diff"
 	"github.com/echlebek/erickson/resource"
 	"github.com/echlebek/erickson/review"
+	"github.com/gorilla/csrf"
 )
+
+const err500 = "Internal server error"
 
 func home(ctx context, w http.ResponseWriter, req *http.Request) {
 	sums, err := ctx.db.GetSummaries()
 	if err != nil {
-		jsonError(w, err, 500)
+		log.Println(err)
+		http.Error(w, err500, 500)
 		return
 	}
 	res := make([]resource.ReviewSummary, 0, len(sums))
@@ -31,12 +37,17 @@ func home(ctx context, w http.ResponseWriter, req *http.Request) {
 		Reviews     []resource.ReviewSummary
 		Stylesheets map[string]http.Handler
 		Scripts     map[string]http.Handler
-	}{res, assets.StylesheetHandlers, assets.ScriptHandlers}
+		CSRFField   template.HTML
+	}{res, assets.StylesheetHandlers, assets.ScriptHandlers, csrf.TemplateField(req)}
 	if err := assets.Templates["reviews.html"].Execute(w, wrap); err != nil {
 		log.Println(err)
-		w.WriteHeader(500)
+		http.Error(w, err500, 500)
 		return
 	}
+}
+
+func headReview(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("X-CSRF-Token", csrf.Token(req))
 }
 
 func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
@@ -59,20 +70,97 @@ func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
 		resource.Review
 		Stylesheets map[string]http.Handler
 		Scripts     map[string]http.Handler
-	}{res, assets.StylesheetHandlers, assets.ScriptHandlers}
+		CSRFField   template.HTML
+	}{res, assets.StylesheetHandlers, assets.ScriptHandlers, csrf.TemplateField(req)}
 	if err := assets.Templates["review.html"].Execute(w, wrap); err != nil {
 		log.Println(err)
 		return
 	}
 }
 
-func postReview(ctx context, w http.ResponseWriter, req *http.Request) {
-	switch req.Header.Get("Content-Type") {
-	case "application/json":
-		postJSONReview(ctx, w, req)
-	case "application/x-www-form-urlencoded":
-		postFormReview(ctx, w, req)
+func postStatus(ctx context, w http.ResponseWriter, req *http.Request) {
+	if err := req.ParseForm(); err != nil {
+		log.Println(err)
+		http.Error(w, "couldn't parse form", 400)
+		return
 	}
+	r, err := ctx.db.GetReview(ctx.review)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("review %d not found", ctx.review), http.StatusNotFound)
+		return
+	}
+	status := req.FormValue("status")
+	switch status {
+	case review.Open, review.Submitted, review.Discarded:
+		break
+	default:
+		http.Error(w, fmt.Sprintf("invalid status: %q", status), http.StatusBadRequest)
+		return
+	}
+	r.Summary.Status = status
+	if err := ctx.db.SetSummary(ctx.review, r.Summary); err != nil {
+		log.Println(err)
+		http.Error(w, "database error", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, req, "/reviews/"+strconv.Itoa(ctx.review), http.StatusSeeOther)
+}
+
+func postAnnotation(ctx context, w http.ResponseWriter, req *http.Request) {
+	if err := req.ParseForm(); err != nil {
+		log.Println(err)
+		http.Error(w, "couldn't parse form", 400)
+		return
+	}
+	r, err := ctx.db.GetReview(ctx.review)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("review %d not found", ctx.review), http.StatusNotFound)
+		return
+	}
+	file, err := strconv.Atoi(req.FormValue("file"))
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "need file number", 400)
+		return
+	}
+	hunk, err := strconv.Atoi(req.FormValue("hunk"))
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "need hunk number", 400)
+		return
+	}
+	line, err := strconv.Atoi(req.FormValue("line"))
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "need line number", 400)
+		return
+	}
+	comment := req.FormValue("comment")
+	session, err := ctx.store.Get(req, SessionName)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "couldn't get session", 401)
+		return
+	}
+	annotation := review.Annotation{
+		File:    file,
+		Hunk:    hunk,
+		Line:    line,
+		Comment: comment,
+		User:    session.Values["username"].(string),
+	}
+	if len(r.Revisions) < 1 {
+		http.Error(w, "no revisions", http.StatusBadRequest)
+		return
+	}
+	revision := ctx.revision
+	r.Revisions[revision].Annotate(annotation)
+	if err := ctx.db.UpdateRevision(ctx.review, revision, r.Revisions[revision]); err != nil {
+		log.Println(err)
+		http.Error(w, "database error", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, req, "/reviews/"+strconv.Itoa(ctx.review), http.StatusSeeOther)
 }
 
 func patchReview(ctx context, w http.ResponseWriter, req *http.Request) {

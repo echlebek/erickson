@@ -2,11 +2,14 @@ package server
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"testing"
 
@@ -121,8 +124,6 @@ index 90e913e..c31da41 100644
  COMMIT;
 `
 
-var Do = http.DefaultTransport.RoundTrip
-
 func TestServer(t *testing.T) {
 	f, err := ioutil.TempFile("/tmp", "erickson")
 	if err != nil {
@@ -135,27 +136,81 @@ func TestServer(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	user, err := review.NewUser("testuser", "testpassword")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := db.CreateUser(user); err != nil {
+		t.Fatal(err)
+	}
+
 	wd, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
 	}
 	handler := NewRootHandler(db, wd+"./..")
-	fmt.Println(os.Getwd())
 
-	server := httptest.NewServer(handler)
+	server := httptest.NewUnstartedServer(handler)
+	cert, err := tls.LoadX509KeyPair("test.crt", "test.key")
+	if err != nil {
+		t.Fatal(err)
+	}
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: true, // testing only
+		Certificates:       []tls.Certificate{cert},
+	}
+	server.TLS = tlsConfig
+	server.StartTLS()
 	defer server.Close()
 
 	*handler.URL = server.URL
 	url := server.URL
 
-	url = create(t, url)
-	read(t, url)
-	annotate(t, url+"/rev/0")
-	update(t, url)
-	destroy(t, url)
+	client := newClient(t, url)
+	url = create(t, client, url)
+	read(t, client, url)
+	annotate(t, client, url+"/rev/0")
+	update(t, client, url)
+	destroy(t, client, url)
 }
 
-func create(t *testing.T, url string) string {
+func newClient(t *testing.T, host string) *http.Client {
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	certPool := x509.NewCertPool()
+	cert, err := ioutil.ReadFile("test.crt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok := certPool.AppendCertsFromPEM(cert); !ok {
+		t.Fatal("couldn't get cert")
+	}
+	transport := http.DefaultTransport.(*http.Transport)
+	transport.TLSClientConfig = &tls.Config{
+		RootCAs:            certPool,
+		InsecureSkipVerify: true,
+	}
+	c := &http.Client{Jar: jar, Transport: transport}
+	authInfo := url.Values{"username": {"testuser"}, "password": {"testpassword"}}
+	response, err := c.PostForm(host+"/login", authInfo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.StatusCode != 200 {
+		t.Error("want status 200")
+	}
+	cookies := response.Cookies()
+	url, err := url.Parse(host)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.Jar.SetCookies(url, cookies)
+	return c
+}
+
+func create(t *testing.T, client *http.Client, url string) string {
 	files, err := diff.ParseFiles(diffTxt)
 	if err != nil {
 		t.Fatal(err)
@@ -173,27 +228,20 @@ func create(t *testing.T, url string) string {
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := Do(req)
-	if err != nil {
-		t.Fatal(err)
+	resp, err := client.Do(req)
+	// The server issues a redirect to the review, so the status ends up being 200.
+	if err != nil || resp.StatusCode != 200 {
+		t.Fatalf("bad response: %d, %s", resp.StatusCode, err)
 	}
-	if resp.StatusCode != 303 {
-		msg, _ := ioutil.ReadAll(resp.Body)
-		t.Fatalf("bad response: code %d, %s", resp.StatusCode, msg)
-	}
-	expURL := url + "/reviews/1"
-	if resp.Header.Get("Location") != expURL {
-		t.Errorf("wrong url. got %s, want %s", resp.Header.Get("Location"), expURL)
-	}
-	return expURL
+	return url + "/reviews/1"
 }
 
-func read(t *testing.T, url string) []byte {
+func read(t *testing.T, client *http.Client, url string) []byte {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	resp, err := Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -207,41 +255,41 @@ func read(t *testing.T, url string) []byte {
 	return body
 }
 
-func update(t *testing.T, url string) {
+func update(t *testing.T, client *http.Client, url string) {
 
 	//req, err := http.NewRequest("PATCH", url, body)
 }
 
-func annotate(t *testing.T, url string) {
-	anno := review.Annotation{
-		File:    0,
-		Hunk:    0,
-		Line:    123,
-		Comment: "I don't like this line",
+func annotate(t *testing.T, client *http.Client, path string) {
+	data := url.Values{
+		"file":    {"0"},
+		"hunk":    {"0"},
+		"line":    {"123"},
+		"comment": {"I don't like this line"},
 	}
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(&anno); err != nil {
-		t.Fatal(err)
-	}
-	req, err := http.NewRequest("PATCH", url, &buf)
-	if err != nil {
-		t.Fatal(err)
-	}
-	resp, err := Do(req)
+	resp, err := client.PostForm(path+"/annotations", data)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if resp.StatusCode != 200 {
 		t.Errorf("couldn't annotate review: %d", resp.StatusCode)
 	}
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(b) == 0 {
+		t.Error("empty response")
+	}
+	// TODO check body for annotation
 }
 
-func destroy(t *testing.T, url string) {
+func destroy(t *testing.T, client *http.Client, url string) {
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	resp, err := Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}

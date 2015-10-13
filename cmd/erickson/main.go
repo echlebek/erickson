@@ -1,30 +1,78 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
-	"time"
+	"os"
 
+	"github.com/BurntSushi/toml"
 	"github.com/echlebek/erickson/db"
 	"github.com/echlebek/erickson/server"
+	"github.com/gorilla/csrf"
 )
 
-func main() {
-	db, err := db.NewBoltDB("my2.db")
+const usage = `erickson code review
+====================
+
+Usage:
+  $ erickson config           # Prints a configuration template to stdout
+  $ erickson config file.cfg  # Runs erickson with file.cfg as configuration
+`
+
+type serverCfg struct {
+	Database   string `toml:"database"`
+	SessionKey string `toml:"session_key"`
+	TLSCert    string `toml:"tls_cert"`
+	TLSKey     string `toml:"tls_key"`
+	Port       string `toml:"port"`
+}
+
+var config = serverCfg{
+	Database:   "erickson.db",
+	SessionKey: "12345678901234567890123456789012",
+	TLSCert:    "server.crt",
+	TLSKey:     "server.key",
+	Port:       "8080",
+}
+
+func exec() {
+	db, err := db.NewBoltDB(config.Database)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	handler := server.NewRootHandler(db, ".")
-
-	s := http.Server{
-		Addr:           ":8080",
-		Handler:        handler,
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
-		MaxHeaderBytes: 1 << 20,
+	handler := server.NewRootHandler(db, ".", []byte(config.SessionKey))
+	if config.TLSCert != "" && config.TLSKey != "" && len(config.SessionKey) == 32 {
+		CSRF := csrf.Protect([]byte(config.SessionKey))
+		log.Fatal(http.ListenAndServeTLS(":"+config.Port, config.TLSCert, config.TLSKey, CSRF(handler)))
+	} else {
+		log.Fatal(http.ListenAndServe(":"+config.Port, handler))
 	}
+}
 
-	log.Fatal(s.ListenAndServe())
+func printConfigTemplate() {
+	enc := toml.NewEncoder(os.Stdout)
+	config := struct { // Wrap config to give it a nice heading
+		Server serverCfg `toml:"server"`
+	}{config}
+	if err := enc.Encode(config); err != nil {
+		// Shouldn't ever happen, so make some noise
+		panic(err)
+	}
+	fmt.Fprintln(os.Stdout)
+}
+
+func main() {
+	args := os.Args
+	if len(args) > 1 && len(args) < 4 && args[1] == "config" {
+		if len(args) > 2 {
+			exec()
+		} else {
+			printConfigTemplate()
+		}
+	} else {
+		fmt.Fprintln(os.Stdout, usage)
+	}
 }

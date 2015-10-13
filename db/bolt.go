@@ -24,6 +24,7 @@ var (
 	reviewsKey            = []byte("reviews")
 	revisionsKey          = []byte("revisions")
 	summaryKey            = []byte("summary")
+	usersKey              = []byte("users")
 )
 
 func getReviewsBucket(tx *bolt.Tx) (*bolt.Bucket, error) {
@@ -92,7 +93,10 @@ func NewBoltDB(path string) (*BoltDB, error) {
 				return err
 			}
 		}
-		_, err = root.CreateBucketIfNotExists(reviewsKey)
+		if _, err := root.CreateBucketIfNotExists(reviewsKey); err != nil {
+			return err
+		}
+		_, err = root.CreateBucketIfNotExists(usersKey)
 		return err
 	})
 
@@ -295,5 +299,77 @@ func (db *BoltDB) UpdateRevision(id, revId int, revision review.Revision) error 
 			return err
 		}
 		return reviewBkt.Put(revisionsKey, revisionsValue)
+	})
+}
+
+func getUsersBucket(tx *bolt.Tx) (b *bolt.Bucket, err error) {
+	root := tx.Bucket(rootKey)
+	if root == nil {
+		err = ErrNoDB
+		return
+	}
+	b = root.Bucket(usersKey)
+	if b == nil {
+		err = ErrNoDB
+	}
+	return
+}
+
+func (db *BoltDB) CreateUser(u review.User) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		userBkt, err := getUsersBucket(tx)
+		if err != nil {
+			return err
+		}
+		if userValue := userBkt.Get([]byte(u.Name)); userValue != nil {
+			return ErrUserExists
+		}
+		userValue, err := json.Marshal(u)
+		if err != nil {
+			return err
+		}
+		return userBkt.Put([]byte(u.Name), userValue)
+	})
+}
+
+func (db *BoltDB) UpdateUser(u review.User) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		userBkt, err := getUsersBucket(tx)
+		if err != nil {
+			return err
+		}
+		if userValue := userBkt.Get([]byte(u.Name)); userValue == nil {
+			return ErrNoUser
+		}
+		userValue, err := json.Marshal(u)
+		if err != nil {
+			return err
+		}
+		return userBkt.Put([]byte(u.Name), userValue)
+	})
+}
+
+func (db *BoltDB) GetUser(username string) (u review.User, err error) {
+	err = db.Update(func(tx *bolt.Tx) error {
+		userBkt, err := getUsersBucket(tx)
+		if err != nil {
+			return err
+		}
+		userValue := userBkt.Get([]byte(username))
+		if userValue == nil {
+			return ErrNoUser
+		}
+		return json.Unmarshal(userValue, &u)
+	})
+	return
+}
+
+func (db *BoltDB) DeleteUser(username string) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		userBkt, err := getUsersBucket(tx)
+		if err != nil {
+			return err
+		}
+		return userBkt.Delete([]byte(username))
 	})
 }

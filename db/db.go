@@ -7,7 +7,11 @@ import (
 	"github.com/echlebek/erickson/review"
 )
 
-var ErrNoDB = errors.New("the database does not exist or is corrupt")
+var (
+	ErrNoDB       = errors.New("the database does not exist or is corrupt")
+	ErrUserExists = errors.New("this username is already taken")
+	ErrNoUser     = errors.New("no such user")
+)
 
 type ErrNoReview int
 type ErrNoRevision int
@@ -50,4 +54,16 @@ type Database interface {
 
 	// DeleteReview deletes a review.
 	DeleteReview(id int) error
+
+	// CreateUser creates a user.
+	CreateUser(review.User) error
+
+	// UpdateUser replaces an existing user with the one provided.
+	UpdateUser(review.User) error
+
+	// GetUser gets a user by name
+	GetUser(string) (review.User, error)
+
+	// DeleteUser deletes a user by name.
+	DeleteUser(string) error
 }

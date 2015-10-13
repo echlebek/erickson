@@ -1,71 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	{{ range $k, $v := .Stylesheets }}
-	<link rel="stylesheet" href="/assets/{{ $k }}">
-	{{ end }}
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		{{ range $k, $v := .Stylesheets }}
+		<link rel="stylesheet" href="/assets/{{ $k }}">
+		{{ end }}
 
-	{{ range $k, $v := .Scripts }}
-	<script src="/assets/{{ $k }}"></script>
-	{{ end }}
-  </head>
-  <body class="bg-base01">
-  	<nav class="clearfix bg-base03">
-	  <div class="sm-col">
-		<a class="btn aqua mt1 mb1 ml1" href="/">Erickson Code Review</a>
-      </div>
-      <div id="navbar" class="navbar">
-        <div class="sm-col-right">
-          <button onClick="createReview()" class="btn btn-outline mb1 mt1 mr1 btn-submit">Create Review</button>
-          <button onClick="cancelReview()" class="btn btn-outline mb1 mt1 mr1 btn-discard hidden" id="cancel-button">Cancel</button>
-        </div>
-      </div>
-    </nav>
-    <div>
-      <div class="container bg-base3 base02 border rounded mt4 p2 create-review hidden" id="create-review">
-        <h3>Create a new review by uploading a diff.</h3>
-		<form method="post" action="/reviews">
-		  <!-- Hidden textarea we load the diff into -->
-          <textarea style="display: none;" name="diff" id="diff"></textarea>
-          <div class="p2">
-            <input class="m1 p1 field" type="file" onchange="pasteFile(this.files[0])">
-			<input class="m1 block col-12 field" type="text" name="commitmsg" placeholder="Commit Message">
-			<input class="m1 block col-12 field" type="text" name="username" placeholder="User Name">
-			<input class="m1 block col-12 field" type="text" name="repository" placeholder="Repository Name">
-            <button type="submit" class="m1 btn btn-outline">Submit</button> 
-          </div>
-        </form>
-      </div>
-      <div class="container base02 bg-base3 border rounded mt4 p2">
-        <h2>Reviews</h2>
-        <div class="checkbox">
-          <label>
-            <input id="show-all" onClick="toggleShowAll()" type="checkbox" value="false">Show Submitted and Discarded Reviews</input>
-          </label>
-	    </div>
-		<p></p>
-        <table class="table-light base02 border rounded">
-          <thead class="aqua bg-base03">
-            <th>Review</th>
-            <th>Repository</th>
-            <th>Submitter</th>
-            <th>Submitted At</th>
-            <th>Status</th>
-          </thead>
-          <tbody>
-            {{range $i, $v := .Reviews}}
-            <tr class="bg-lighten-4">
-              <td><a class="btn btn-outline base02" href="{{$v.URL}}"><span title="{{$v.CommitMsg}}" class="label label-primary">Review {{$v.ID}}</span></a></td>
-              <td class="align-middle">{{$v.Repository}}</td>
-              <td class="align-middle">{{$v.Submitter}}</td>
-              <td class="align-middle">{{$v.SubmittedAt}}</td>
-              <td class="align-middle"><span id="status-{{$i}}" class="label {{$v.StatusLabel}}">{{$v.Status}}</span></td>
-            </tr>
-            {{end}}
-          <tbody>
-        </table>
-      </div>
-    </div>
-  </body>
-</html>
+		{{ range $k, $v := .Scripts }}
+		<script src="/assets/{{ $k }}"></script>
+		{{ end }}
+	</head>
+	<body class="bg-base01">
+		<nav class="clearfix bg-base03">
+		<div class="sm-col">
+			<a class="btn aqua mt1 mb1 ml1" href="/">Erickson Code Review</a>
+		</div>
+		<div id="navbar" class="navbar">
+			<div class="sm-col-right">
+				<button onClick="createReview()" class="btn btn-outline mb1 mt1 mr1 btn-submit">Create Review</button>
+				<button onClick="cancelReview()" class="btn btn-outline mb1 mt1 mr1 btn-discard hidden" id="cancel-button">Cancel</button>
+			</div>
+		</div>
+		</nav>
+		<div>
+			<div class="container bg-base3 base02 border rounded mt4 p2 create-review hidden" id="create-review">
+				<h3>Create a new review by uploading a diff.</h3>
+				<form method="post" action="/reviews">
+					<!-- Hidden textarea we load the diff into -->
+					<textarea style="display: none;" name="diff" id="diff"></textarea>
+					<div class="p2">
+						<span>
+							<div class="diffupload btn btn-outline">
+								<span>Choose Diff <span id="diffcheckmark" class="h4 hidden">&#x2713;</span></span>
+								<input class="upload" type="file" onchange="pasteFile(this.files[0])">
+							</div>
+						</span>
+						<input class="m1 block col-12 field" type="text" name="commitmsg" placeholder="Commit Message">
+						<input class="m1 block col-12 field" type="text" name="username" placeholder="User Name">
+						<input class="m1 block col-12 field" type="text" name="repository" placeholder="Repository Name">
+						<button type="submit" class="m1 btn btn-outline">Submit</button> 
+					</div>
+					{{ .CSRFField }}
+				</form>
+			</div>
+			<div class="container base02 bg-base3 border rounded mt4 p2">
+				<h2 class="h2">Reviews</h2>
+				<div class="checkbox">
+					<label>
+						<input id="show-all" onClick="toggleShowAll()" type="checkbox" value="false">Show Submitted and Discarded Reviews</input>
+					</label>
+				</div>
+				<p></p>
+				<table class="table-light base02">
+					<thead class="aqua bg-base03">
+						<th class="rounded-left">Review</th>
+						<th>Repository</th>
+						<th>Submitter</th>
+						<th>Submitted At</th>
+						<th class="rounded-right">Status</th>
+					</thead>
+					<tbody>
+						{{range $i, $v := .Reviews}}
+						<tr>
+							<td><a class="btn btn-outline regular base02" href="{{$v.URL}}"><span title="{{$v.CommitMsg}}" class="label label-primary">Review {{$v.ID}}</span></a></td>
+							<td class="align-middle">{{$v.Repository}}</td>
+							<td class="align-middle">{{$v.Submitter}}</td>
+							<td class="align-middle">{{$v.SubmittedAt}}</td>
+							<td class="align-middle"><span id="status-{{$i}}" class="label {{$v.StatusLabel}}">{{$v.Status}}</span></td>
+						</tr>
+						{{end}}
+						<tbody>
+						</table>
+					</div>
+				</div>
+			</body>
+		</html>

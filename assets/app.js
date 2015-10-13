@@ -8,18 +8,6 @@ function cancelReview() {
   $("#cancel-button").addClass("hidden");
 }
 
-function submitReview() {
-  patchReview("Submitted");
-}
-
-function discardReview() {
-  patchReview("Discarded");
-}
-
-function reopenReview() {
-  patchReview("Open");
-}
-
 function toggleShowAll() {
   if ($("#show-all").is(":checked")) {
     $("tr").show();
@@ -28,20 +16,6 @@ function toggleShowAll() {
       return $(this).text() !== "Open";
     }).parent().parent().hide();
   }
-}
-
-function patchReview(status) {
-  $.ajax({
-    headers: {
-      "Content-Type": "application/json"
-    },
-    url: window.location,
-    type: "PATCH",
-    data: JSON.stringify({status: status}),
-    complete: function() {
-      window.location.reload();
-    }
-  });
 }
 
 function patchRevision(annotation) {
@@ -66,6 +40,7 @@ function pasteFile(file) {
     $("#diff").text(e.target.result);
   }
   reader.readAsText(file);
+  $("#diffcheckmark").show();
 }
 
 window.onload = function() {
@@ -100,23 +75,11 @@ function showAnnotate(td) {
 
   // Stash some data in the comment element for submitting to the server
   var idParts = tr.attr("id").split("-");
-  $("#comment").data("file", Number(idParts[1]));
-  $("#comment").data("hunk", Number(idParts[2]));
-  $("#comment").data("line", Number(idParts[3]));
+  $("#file").val(Number(idParts[1]));
+  $("#hunk").val(Number(idParts[2]));
+  $("#line").val(Number(idParts[3]));
 }
 
 function cancelAnnotate() {
   $(".annotate-form").hide();
-}
-
-function postComment() {
-  var comment = $("#comment");
-  var annotation = {
-    file: comment.data("file"),
-    hunk: comment.data("hunk"),
-    line: comment.data("line"),
-    comment: comment.val(),
-    user: "Anonymous"
-  };
-  patchRevision({annotation: annotation});
 }

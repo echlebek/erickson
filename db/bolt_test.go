@@ -10,6 +10,7 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/echlebek/erickson/diff"
 	"github.com/echlebek/erickson/review"
+	"github.com/echlebek/erickson/sec"
 )
 
 const mockDiff1 = `--- a/setup.py	Mon Aug 05 22:46:08 2013 -0700
@@ -224,5 +225,51 @@ func TestCRUD(t *testing.T) {
 		t.Fatal(err)
 	} else if len(summaries) != 1 {
 		t.Error("delete failed")
+	}
+}
+
+func TestUser(t *testing.T) {
+	u := review.User{
+		Credentials: sec.Credentials{
+			Name:           "Fox Mulder",
+			Salt:           "salt",
+			HashedPassword: "password",
+		},
+	}
+	tmpdir, err := ioutil.TempDir("/tmp", "erickson")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpdir)
+	db, err := NewBoltDB(tmpdir + "/erickson.db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := db.CreateUser(u); err != nil {
+		t.Fatal(err)
+	}
+	if v, err := db.GetUser(u.Name); err != nil {
+		t.Fatal(err)
+	} else if u != v {
+		t.Errorf("bad user: got %+v, want %+v", v, u)
+	}
+	// Try to create same user again, test for failure
+	if err := db.CreateUser(u); err != ErrUserExists {
+		t.Errorf("expected error: %q", ErrUserExists)
+	}
+	u.HashedPassword = "anotherpassword"
+	if err := db.UpdateUser(u); err != nil {
+		t.Fatal(err)
+	}
+	if v, err := db.GetUser(u.Name); err != nil {
+		t.Fatal(err)
+	} else if u != v {
+		t.Errorf("bad user: got %+v, want %+v", v, u)
+	}
+	if err := db.DeleteUser(u.Name); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.GetUser(u.Name); err != ErrNoUser {
+		t.Errorf("expected %q", ErrNoUser)
 	}
 }

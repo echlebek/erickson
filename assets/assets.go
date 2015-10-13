@@ -5,6 +5,8 @@ import "net/http"
 //go:generate -command asset go run asset.go
 //go:generate asset review.tmpl
 //go:generate asset reviews.tmpl
+//go:generate asset signup.tmpl
+//go:generate asset login.tmpl
 //go:generate asset styles.css
 //go:generate asset basscss.css
 //go:generate asset app.js
@@ -22,6 +24,8 @@ var (
 	Templates = map[string]Template{
 		"review.html":  review,
 		"reviews.html": reviews,
+		"signup.html":  signup,
+		"login.html":   login,
 	}
 )
 

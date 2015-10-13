@@ -7,7 +7,7 @@
 	{{ end }}
 
 	{{ range $k, $v := .Scripts }}
-	<script src="/assets/{{ $k }}"></script>
+	<script async="async" src="/assets/{{ $k }}"></script>
 	{{ end }}
   </head>
   <body class="bg-base01">
@@ -17,10 +17,14 @@
 	    <pre class="line-text code-pre font-14"></pre>
 	    <br>
 	    <br>
-	    <form>
+		<form method="post" action="/reviews/{{.ID}}/annotations">
+		  {{ .CSRFField }}
 		  <label for="comment">Leave a comment</label>
-		  <textarea id="comment" class="monospace base01 bg-base3 block m1 pr3 field col-12"></textarea>
-		  <div class="btn btn-outline" onClick="postComment();">Post Comment</div>
+		  <textarea name="comment" id="comment" class="monospace base01 bg-base3 block m1 pr3 field col-12"></textarea>
+		  <input id="file" class="hidden" name="file"></input>
+		  <input id="hunk" class="hidden" name="hunk"></input>
+		  <input id="line" class="hidden" name="line"></input>
+		  <button class="btn btn-outline">Post Comment</button>
 		  <div class="btn btn-outline" onClick="cancelAnnotate();">Cancel</div>
 	    </form>
 	  </div>
@@ -32,10 +36,21 @@
 	  </div>
 	  <div class="sm-col-right align-middle">
 	  {{ if .StatusOpen }}
-		<button onClick="submitReview()" class="btn btn-outline mt1 mb1 mr1 btn-submit">Submit Review</button>
-		<button onClick="discardReview()" class="btn btn-outline mt1 mb1 mr1 btn-discard">Discard Review</button>
+	    <span>
+		<form style="float: left;" method="post" action="/reviews/{{.ID}}/status">
+		  <button name="status" value="Submitted" class="btn btn-outline mt1 mb1 mr1 btn-submit">Submit Review</button>
+		  {{ .CSRFField }}
+		</form>
+		<form style="float: right;" method="post" action="/reviews/{{.ID}}/status">
+		  <button name="status" value="Discarded" class="btn btn-outline mt1 mb1 mr1 btn-discard">Discard Review</button>
+		  {{ .CSRFField }}
+		</form>
+	    </span>
 	  {{ else }}
-	    <button onClick="reopenReview()" class="btn btn-outline mt1 mb1 mr1 btn-reopen">Re-open Review</button>
+		<form method="post" action="/reviews/{{.ID}}/status">
+	      <button name="status" value="Open" class="btn btn-outline mt1 mb1 mr1 btn-reopen">Re-open Review</button>
+		  {{ .CSRFField }}
+		</form>
 	  {{ end }}
 	  </div>
 	</nav>
@@ -44,10 +59,10 @@
 	  <a href="#/rev/{{ $r }}" class="btn btn-outline base3 bg-lighten-2">Revision {{ $r }}</a>
       {{ range $i, $f := $revision.Files }}
       <table class="border rounded table table-condensed mb1 mt1" id="diff">
-        <td class="bg-base1 h5"></td>
-        <td class="bg-base1 h5"><pre class="bold bg-base02 border px1 inline"><code class="red">--- {{ $f.OldName }}</code></pre></td>
-        <td class="bg-base1 h5"></td>
-        <td class="bg-base1 h5"><pre class="bold bg-base02 border px1 inline"><code class="green">+++ {{ $f.NewName }}</code></pre></td>
+		<!--td class="bg-base1 h5"></td-->
+        <td colspan="2" class="bg-base1 h5"><pre class="bold bg-base02 border px1 inline"><code class="red">--- {{ $f.OldName }}</code></pre></td>
+        <!--td class="bg-base1 h5"></td-->
+        <td colspan="2" class="bg-base1 h5"><pre class="bold bg-base02 border px1 inline"><code class="green">+++ {{ $f.NewName }}</code></pre></td>
         {{ range $j, $hunk := $f.Hunks }}
         {{ range $k, $lhs := $hunk.LHS }}
 		<tr class="diffline" id="tr-{{$i}}-{{$j}}-{{$k}}" >

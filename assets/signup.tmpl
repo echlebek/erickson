@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	{{ range $k, $v := .Stylesheets }}
+	<link rel="stylesheet" href="/assets/{{ $k }}">
+	{{ end }}
+
+	{{ range $k, $v := .Scripts }}
+	<script src="/assets/{{ $k }}"></script>
+	{{ end }}
+  </head>
+  <body class="bg-base01">
+	<nav class="clearfix white bg-base02">
+	  <div class="sm-col">
+		<a class="btn aqua mt1 mb1 ml1" href="/">
+		  Erickson Code Review
+		</a>
+		Signup
+	  </div>
+	</nav>
+	<div class="container bg-base3 base02 border rounded m4 p2">
+	  <h2 class="ml2 h2 regular">Create an account</h2>
+	  <div class="base02 ml2 p2 md-col-6">
+	    <form method="post" action="/signup" class="md-col-4">
+	      <label for="username">E-mail Address</label>
+		  <input name="username" id="username" type="email" placeholder="user@example.com" class="field mb1" required>
+	      <label for="password">Password</label>
+		  <input name="password" id="password" minlength="8" placeholder="At least 8 characters" type="password" class="field" required>
+		  <button id="submit" type="submit" class="btn btn-outline mt2">Create</button>
+		  {{ .csrfField }}
+	    </form>
+      </div>
+	</div>
+  </body>
+</html>

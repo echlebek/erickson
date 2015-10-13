@@ -1,0 +1,7 @@
+// AUTOMATICALLY GENERATED FILE. DO NOT EDIT.
+
+package assets
+
+var signup = tmpl(asset.init(asset{Name: "signup.tmpl", Content: "" +
+	"<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\t{{ range $k, $v := .Stylesheets }}\n\t<link rel=\"stylesheet\" href=\"/assets/{{ $k }}\">\n\t{{ end }}\n\n\t{{ range $k, $v := .Scripts }}\n\t<script src=\"/assets/{{ $k }}\"></script>\n\t{{ end }}\n  </head>\n  <body class=\"bg-base01\">\n\t<nav class=\"clearfix white bg-base02\">\n\t  <div class=\"sm-col\">\n\t\t<a class=\"btn aqua mt1 mb1 ml1\" href=\"/\">\n\t\t  Erickson Code Review\n\t\t</a>\n\t\tSignup\n\t  </div>\n\t</nav>\n\t<div class=\"container bg-base3 base02 border rounded m4 p2\">\n\t  <h2 class=\"ml2 h2 regular\">Create an account</h2>\n\t  <div class=\"base02 ml2 p2 md-col-6\">\n\t    <form method=\"post\" action=\"/signup\" class=\"md-col-4\">\n\t      <label for=\"username\">E-mail Address</label>\n\t\t  <input name=\"username\" id=\"username\" type=\"email\" placeholder=\"user@example.com\" class=\"field mb1\" required>\n\t      <label for=\"password\">Password</label>\n\t\t  <input name=\"password\" id=\"password\" minlength=\"8\" placeholder=\"At least 8 characters\" type=\"password\" class=\"field\" required>\n\t\t  <button id=\"submit\" type=\"submit\" class=\"btn btn-outline mt2\">Create</button>\n\t\t  {{ .csrfField }}\n\t    </form>\n      </div>\n\t</div>\n  </body>\n</html>\n" +
+	""}))
