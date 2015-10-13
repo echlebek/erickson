@@ -33,9 +33,7 @@ type context struct {
 	store *sessions.CookieStore
 }
 
-// handler performs partial function application on f to produce an http.HandlerFunc.
-// The returned function will set the review and revision fields of c before
-// calling f, providing f with context.
+// authHandler checks the user's session before proceeding with the request.
 func (c context) authHandler(f func(context, http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		if session, err := c.store.Get(req, SessionName); err != nil || session.IsNew {
@@ -49,6 +47,7 @@ func (c context) authHandler(f func(context, http.ResponseWriter, *http.Request)
 	}
 }
 
+// handler adds context to erickson's handlers.
 func (c context) handler(f func(context, http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		f(c, w, req)
@@ -82,6 +81,8 @@ func (c context) revisionURL(id, revision int) (str string) {
 // /reviews/{id} GET, PATCH, DELETE
 // /reviews/{id}/rev POST
 // /reviews/{id}/rev/{revision} GET, PATCH
+// /reviews/{id}/annotations POST
+// /reviews/{id}/rev/{revision}/annotations POST
 //
 //
 func NewRootHandler(d db.Database, fsRoot string, sessionKey []byte) *RootHandler {
