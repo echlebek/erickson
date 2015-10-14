@@ -141,10 +141,6 @@ func NewRootHandler(d db.Database, fsRoot string, sessionKey []byte) *RootHandle
 		Methods("POST").
 		Headers("Content-Type", "application/x-www-form-urlencoded")
 
-	r.HandleFunc("/reviews", ctx.authHandler(postFormReview)).
-		Methods("POST").
-		Headers("Content-Type", "multipart/form-data")
-
 	r.HandleFunc("/reviews/{id}/rev", ctx.authHandler(postRevision)).
 		Methods("POST").
 		Headers("Content-Type", "application/json")

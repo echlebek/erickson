@@ -210,7 +210,7 @@ func newClient(t *testing.T, host string) *http.Client {
 	return c
 }
 
-func create(t *testing.T, client *http.Client, url string) string {
+func create(t *testing.T, client *http.Client, host string) string {
 	files, err := diff.ParseFiles(diffTxt)
 	if err != nil {
 		t.Fatal(err)
@@ -223,7 +223,7 @@ func create(t *testing.T, client *http.Client, url string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	req, err := http.NewRequest("POST", url+"/reviews", bytes.NewReader(b))
+	req, err := http.NewRequest("POST", host+"/reviews", bytes.NewReader(b))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -233,7 +233,19 @@ func create(t *testing.T, client *http.Client, url string) string {
 	if err != nil || resp.StatusCode != 200 {
 		t.Fatalf("bad response: %d, %s", resp.StatusCode, err)
 	}
-	return url + "/reviews/1"
+
+	// Now do the same thing with application/x-www-form-urlencoded
+	data := url.Values{
+		"diff":       {diffTxt},
+		"commitmsg":  {"Changed some things"},
+		"username":   {"strands slurdinand"},
+		"repository": {"boring_tools"},
+	}
+	if resp, err := client.PostForm(host+"/reviews", data); err != nil || resp.StatusCode != 200 {
+		t.Fatalf("bad response: %d, %s", resp.StatusCode, err)
+	}
+
+	return host + "/reviews/1"
 }
 
 func read(t *testing.T, client *http.Client, url string) []byte {
