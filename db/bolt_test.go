@@ -116,11 +116,11 @@ func TestCRUD(t *testing.T) {
 	}
 
 	if s1, s2 := gotReview.Summary, mockReview.Summary; !reflect.DeepEqual(s1, s2) {
-		t.Fatalf("bad summary data. got %+v, want %+v", s1, s2)
+		t.Errorf("bad summary data. got %#v, want %#v", s1, s2)
 	}
 
 	if r1, r2 := gotReview.Revisions, mockReview.Revisions; !reflect.DeepEqual(r1, r2) {
-		t.Fatalf("bad revision data. got %+v, want %+v", r1, r2)
+		t.Errorf("bad revision data. got %#v, want %#v", r1, r2)
 	}
 
 	mockReview2 := mockReview
@@ -152,11 +152,11 @@ func TestCRUD(t *testing.T) {
 	mockReview2.Revisions = append(mockReview2.Revisions, review.Revision{Files: files})
 
 	if s1, s2 := gotReview.Summary, mockReview2.Summary; !reflect.DeepEqual(s1, s2) {
-		t.Fatalf("bad summary data. got %+v, want %+v", s1, s2)
+		t.Errorf("bad summary data. got %#v, want %#v", s1, s2)
 	}
 
 	if r1, r2 := gotReview.Revisions, mockReview2.Revisions; !reflect.DeepEqual(r1, r2) {
-		t.Fatalf("bad revision data. got %+v, want %+v", r1, r2)
+		t.Errorf("bad revision data. got %#v, want %#v", r1, r2)
 	}
 
 	summaries, err := db.GetSummaries()
@@ -167,10 +167,10 @@ func TestCRUD(t *testing.T) {
 		t.Fatalf("wrong number of review summaries: got %d, want 2", sumLen)
 	}
 	if summaries[0] != mockReview.Summary {
-		t.Errorf("wrong review summary: got %+v, want %+v", summaries[0], mockReview.Summary)
+		t.Errorf("wrong review summary: got %#v, want %#v", summaries[0], mockReview.Summary)
 	}
 	if summaries[1] != mockReview2.Summary {
-		t.Errorf("wrong review summary: got %+v, want %+v", summaries[1], mockReview.Summary)
+		t.Errorf("wrong review summary: got %#v, want %#v", summaries[1], mockReview.Summary)
 	}
 
 	newSum := mockReview2.Summary
@@ -185,7 +185,7 @@ func TestCRUD(t *testing.T) {
 	}
 
 	if summaries[1] != newSum {
-		t.Errorf("wrong review summary: got %+v, want %+v", summaries[1], newSum)
+		t.Errorf("wrong review summary: got %#v, want %#v", summaries[1], newSum)
 	}
 
 	anno := review.Annotation{
@@ -208,7 +208,7 @@ func TestCRUD(t *testing.T) {
 	if annotations := mr2.Revisions[0].Annotations; len(annotations) != 2 {
 		t.Errorf("wrong number of annotations: got %d, want %d", len(annotations), 2)
 	} else if annotations[1] != anno {
-		t.Errorf("wrong annotation: got %+v, want %+v", annotations[0], anno)
+		t.Errorf("wrong annotation: got %#v, want %#v", annotations[0], anno)
 	}
 
 	if err := db.DeleteReview(3); err == nil {
@@ -251,7 +251,7 @@ func TestUser(t *testing.T) {
 	if v, err := db.GetUser(u.Name); err != nil {
 		t.Fatal(err)
 	} else if u != v {
-		t.Errorf("bad user: got %+v, want %+v", v, u)
+		t.Errorf("bad user: got %#v, want %#v", v, u)
 	}
 	// Try to create same user again, test for failure
 	if err := db.CreateUser(u); err != ErrUserExists {
@@ -264,7 +264,7 @@ func TestUser(t *testing.T) {
 	if v, err := db.GetUser(u.Name); err != nil {
 		t.Fatal(err)
 	} else if u != v {
-		t.Errorf("bad user: got %+v, want %+v", v, u)
+		t.Errorf("bad user: got %#v, want %#v", v, u)
 	}
 	if err := db.DeleteUser(u.Name); err != nil {
 		t.Fatal(err)
