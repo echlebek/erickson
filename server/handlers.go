@@ -160,7 +160,8 @@ func postAnnotation(ctx context, w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "database error", http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, req, "/reviews/"+strconv.Itoa(ctx.review), http.StatusSeeOther)
+	path := "/reviews/" + strconv.Itoa(ctx.review) + fmt.Sprintf("#diff-%d-%d-%d", file, hunk, line)
+	http.Redirect(w, req, path, http.StatusSeeOther)
 }
 
 func patchReview(ctx context, w http.ResponseWriter, req *http.Request) {
