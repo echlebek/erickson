@@ -61,8 +61,16 @@ pre {
 	color: #ccebc5;
 }
 
+.bg-green {
+	background-color: #ccebc5;
+}
+
 .red {
 	color: #fbb3ad;
+}
+
+.bg-red {
+	background-color: #fbb3ad;
 }
 
 .hidden {
