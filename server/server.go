@@ -158,5 +158,7 @@ func NewRootHandler(d db.Database, fsRoot string, sessionKey []byte) *RootHandle
 	r.HandleFunc("/login", ctx.handler(postLogin)).Methods("POST").
 		Headers("Content-Type", "application/x-www-form-urlencoded")
 
+	r.HandleFunc("/logout", ctx.authHandler(postLogout)).Methods("POST")
+
 	return handler
 }

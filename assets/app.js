@@ -46,12 +46,21 @@ function pasteFile(file) {
 window.onload = function() {
   // Show only the selected reviews
   toggleShowAll();
+
   $(document).on("click", ".lineno-lhs", function () {
     showAnnotate(this);
   });
 
   $(document).on("click", ".lineno-rhs", function () {
     showAnnotate(this);
+  });
+
+  $("#show-menu").change(function () {
+    if (this.checked) {
+      $("#menu").show();
+    } else {
+      $("#menu").hide(); 
+    }
   });
 }
 

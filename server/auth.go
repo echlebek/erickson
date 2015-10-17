@@ -97,3 +97,14 @@ func postLogin(ctx context, w http.ResponseWriter, req *http.Request) {
 	}
 	http.Redirect(w, req, "/", http.StatusSeeOther)
 }
+
+func postLogout(ctx context, w http.ResponseWriter, req *http.Request) {
+	cookie := &http.Cookie{
+		Name:   SessionName,
+		Value:  "",
+		Path:   "/",
+		MaxAge: -1,
+	}
+	http.SetCookie(w, cookie)
+	http.Redirect(w, req, "/", http.StatusSeeOther)
+}

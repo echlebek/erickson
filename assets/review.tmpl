@@ -25,14 +25,18 @@
 		  <input id="hunk" class="hidden" name="hunk"></input>
 		  <input id="line" class="hidden" name="line"></input>
 		  <button class="btn btn-outline">Post Comment</button>
-		  <div class="btn btn-outline" onClick="cancelAnnotate();">Cancel</div>
+		  <div class="btn btn-outline" onClick="toggleMenu();">Cancel</div>
 	    </form>
 	  </div>
 	</aside>
 	<nav class="clearfix white bg-base02">
 	  <div class="sm-col">
-		<a class="btn aqua mt1 mb1 ml1" href="/">Erickson Code Review</a>
-		<a class="btn aqua mt1 mb1" href="">Review {{.ID}} ({{.Status}})</a>
+		<div class="menu-control">
+			<input class="hidden" id="show-menu" value="0" name="" type="checkbox"></input>
+			<label for="show-menu" class="h1 ml2 aqua border-round">&#9881;<span class="font-6"> &#9660;</span></label>
+			<a class="btn aqua mt1 mb1 ml1" href="/">Erickson Code Review</a>
+			<a class="btn aqua mt1 mb1" href="">Review {{.ID}} ({{.Status}})</a>
+		</div>
 	  </div>
 	  <div class="sm-col-right align-middle">
 	  {{ if .StatusOpen }}
@@ -54,6 +58,15 @@
 	  {{ end }}
 	  </div>
 	</nav>
+	<div id="menu" class="menu hidden clearfix bg-base02">
+		<div class="sm-col">
+			<p class="aqua mt2 ml2">{{index .Session.Values "username" }}</p>
+			<form action="/logout" method="post">
+				{{ .CSRFField }}
+				<button class="aqua ml2 mb2 btn btn-outline">Log Out</button>
+			</form>
+		</div>
+	</div>
 	<div class="code-tables">
       {{ range $r, $revision := .R.Revisions }}
 	  <a href="#/rev/{{ $r }}" class="btn btn-outline base3">Revision {{ $r }}</a>

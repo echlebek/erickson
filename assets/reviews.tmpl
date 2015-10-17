@@ -13,7 +13,11 @@
 	<body class="bg-base01">
 		<nav class="clearfix bg-base02">
 		<div class="sm-col">
-			<a class="btn aqua mt1 mb1 ml1" href="/">Erickson Code Review</a>
+			<div class="menu-control">
+				<input class="hidden" id="show-menu" value="0" name="" type="checkbox"></input>
+				<label for="show-menu" class="h1 ml2 aqua border-round">&#9881;<span class="font-6"> &#9660;</span></label>
+				<a class="btn aqua mt1 mb1 ml1" href="/">Erickson Code Review</a>
+			</div>
 		</div>
 		<div id="navbar" class="navbar">
 			<div class="sm-col-right">
@@ -22,6 +26,15 @@
 			</div>
 		</div>
 		</nav>
+		<div id="menu" class="menu hidden clearfix bg-base02">
+			<div class="sm-col">
+				<p class="aqua mt2 ml2">{{index .Session.Values "username" }}</p>
+				<form action="/logout" method="post">
+					{{ .CSRFField }}
+					<button class="aqua ml2 mb2 btn btn-outline">Log Out</button>
+				</form>
+			</div>
+		</div>
 		<div>
 			<div class="container bg-base3 base02 border rounded mt4 p2 create-review hidden" id="create-review">
 				<h3>Create a new review by uploading a diff.</h3>

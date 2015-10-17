@@ -15,11 +15,18 @@ import (
 	"github.com/echlebek/erickson/resource"
 	"github.com/echlebek/erickson/review"
 	"github.com/gorilla/csrf"
+	"github.com/gorilla/sessions"
 )
 
 const err500 = "Internal server error"
 
 func home(ctx context, w http.ResponseWriter, req *http.Request) {
+	session, err := ctx.store.Get(req, SessionName)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err500, 500)
+		return
+	}
 	sums, err := ctx.db.GetSummaries()
 	if err != nil {
 		log.Println(err)
@@ -38,7 +45,14 @@ func home(ctx context, w http.ResponseWriter, req *http.Request) {
 		Stylesheets map[string]http.Handler
 		Scripts     map[string]http.Handler
 		CSRFField   template.HTML
-	}{res, assets.StylesheetHandlers, assets.ScriptHandlers, csrf.TemplateField(req)}
+		Session     *sessions.Session
+	}{
+		res,
+		assets.StylesheetHandlers,
+		assets.ScriptHandlers,
+		csrf.TemplateField(req),
+		session,
+	}
 	if err := assets.Templates["reviews.html"].Execute(w, wrap); err != nil {
 		log.Println(err)
 		http.Error(w, err500, 500)
@@ -51,6 +65,12 @@ func headReview(w http.ResponseWriter, req *http.Request) {
 }
 
 func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
+	session, err := ctx.store.Get(req, SessionName)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err500, 500)
+		return
+	}
 	review, err := ctx.db.GetReview(ctx.review)
 	if err != nil {
 		http.NotFound(w, req)
@@ -71,7 +91,14 @@ func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
 		Stylesheets map[string]http.Handler
 		Scripts     map[string]http.Handler
 		CSRFField   template.HTML
-	}{res, assets.StylesheetHandlers, assets.ScriptHandlers, csrf.TemplateField(req)}
+		Session     *sessions.Session
+	}{
+		res,
+		assets.StylesheetHandlers,
+		assets.ScriptHandlers,
+		csrf.TemplateField(req),
+		session,
+	}
 	if err := assets.Templates["review.html"].Execute(w, wrap); err != nil {
 		log.Println(err)
 		return

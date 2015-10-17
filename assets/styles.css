@@ -134,6 +134,10 @@ code {
 	font-size: 14px;
 }
 
+.font-6 {
+	font-size: 6px;
+}
+
 .index {
 	color: #586e75;
 	font-style: italic;
@@ -211,4 +215,12 @@ code {
     position: relative;
     overflow: hidden;
     margin: 10px;
+}
+
+.menu-control input[type="checkbox"]:checked + label span {
+	color: #ccebc5;
+}
+
+.menu-control label:hover {
+	cursor: pointer;
 }
