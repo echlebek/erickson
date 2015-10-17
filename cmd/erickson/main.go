@@ -52,6 +52,12 @@ func exec() {
 	}
 }
 
+func loadConfig(path string) {
+	if _, err := toml.DecodeFile(path, &config); err != nil {
+		log.Fatalf("couldn't parse config file: %s", err)
+	}
+}
+
 func printConfigTemplate() {
 	enc := toml.NewEncoder(os.Stdout)
 	config := struct { // Wrap config to give it a nice heading
@@ -68,6 +74,7 @@ func main() {
 	args := os.Args
 	if len(args) > 1 && len(args) < 4 && args[1] == "config" {
 		if len(args) > 2 {
+			loadConfig(args[2])
 			exec()
 		} else {
 			printConfigTemplate()
