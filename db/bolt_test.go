@@ -3,7 +3,6 @@ package db
 import (
 	"io/ioutil"
 	"os"
-	"reflect"
 	"testing"
 	"time"
 
@@ -115,11 +114,11 @@ func TestCRUD(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if s1, s2 := gotReview.Summary, mockReview.Summary; !reflect.DeepEqual(s1, s2) {
+	if s1, s2 := gotReview.Summary, mockReview.Summary; !summaryEq(s1, s2) {
 		t.Errorf("bad summary data. got %#v, want %#v", s1, s2)
 	}
 
-	if r1, r2 := gotReview.Revisions, mockReview.Revisions; !reflect.DeepEqual(r1, r2) {
+	if r1, r2 := gotReview.Revisions, mockReview.Revisions; !revisionsEq(r1, r2) {
 		t.Errorf("bad revision data. got %#v, want %#v", r1, r2)
 	}
 
@@ -151,11 +150,11 @@ func TestCRUD(t *testing.T) {
 
 	mockReview2.Revisions = append(mockReview2.Revisions, review.Revision{Files: files})
 
-	if s1, s2 := gotReview.Summary, mockReview2.Summary; !reflect.DeepEqual(s1, s2) {
+	if s1, s2 := gotReview.Summary, mockReview2.Summary; !summaryEq(s1, s2) {
 		t.Errorf("bad summary data. got %#v, want %#v", s1, s2)
 	}
 
-	if r1, r2 := gotReview.Revisions, mockReview2.Revisions; !reflect.DeepEqual(r1, r2) {
+	if r1, r2 := gotReview.Revisions, mockReview2.Revisions; !revisionsEq(r1, r2) {
 		t.Errorf("bad revision data. got %#v, want %#v", r1, r2)
 	}
 
@@ -272,4 +271,60 @@ func TestUser(t *testing.T) {
 	if _, err := db.GetUser(u.Name); err != ErrNoUser {
 		t.Errorf("expected %q", ErrNoUser)
 	}
+}
+
+func summaryEq(s1, s2 review.Summary) bool {
+	return (s1.ID == s2.ID &&
+		s1.CommitMsg == s2.CommitMsg &&
+		s1.Submitter == s2.Submitter &&
+		s1.SubmittedAt.Equal(s2.SubmittedAt) &&
+		s1.UpdatedAt.Equal(s2.UpdatedAt) &&
+		s1.Repository == s2.Repository &&
+		s1.Status == s2.Status)
+
+}
+
+func revisionsEq(r1, r2 []review.Revision) bool {
+	if len(r1) != len(r2) {
+		return false
+	}
+	for i := range r1 {
+		if !revisionEq(r1[i], r2[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func revisionEq(r1, r2 review.Revision) bool {
+	if len(r1.Annotations) != len(r2.Annotations) {
+		return false
+	}
+	if len(r1.Files) != len(r2.Files) {
+		return false
+	}
+	for i := range r1.Annotations {
+		if r1.Annotations[i] != r2.Annotations[i] {
+			return false
+		}
+	}
+	for i := range r1.Files {
+		if !fileEq(r1.Files[i], r2.Files[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func fileEq(f1, f2 diff.File) bool {
+	// only Lines matter
+	if len(f1.Lines) != len(f2.Lines) {
+		return false
+	}
+	for i := range f1.Lines {
+		if f1.Lines[i] != f2.Lines[i] {
+			return false
+		}
+	}
+	return true
 }
