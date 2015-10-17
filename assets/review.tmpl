@@ -13,7 +13,7 @@
   <body class="bg-base01">
 	<!-- the html in <aside> will be inserted into the diff table via jquery -->
 	<aside class="hidden">
-	  <div class="bg-base2 base01 p2 border rounded annotate-form">
+	  <div class="bg-base2 base01 p2 border annotate-form">
 	    <pre class="line-text code-pre font-14"></pre>
 	    <br>
 	    <br>
@@ -81,8 +81,8 @@
 	  	</tr>
 		{{ if ($revision.GetAnnotations $i $j $k) }}
 		<tr>
-		  <td colspan="4" class="bg-base2">
-			<div class="bg-base2 px1 pt1 mr1 ml1 border rounded">
+		  <td colspan="4">
+			<div class="bg-base2 px1 pt1 border">
 			  <p class="bold h4 regular mt1">{{ $f.NewName }}:{{ (index $hunk.RHS $k).Line }}</p>
 			  {{ range $a, $annotation := ($revision.GetAnnotations $i $j $k) }}
 			  <p class="m1">{{ $annotation.User }} says:</p>
