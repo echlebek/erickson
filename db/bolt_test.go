@@ -277,8 +277,6 @@ func summaryEq(s1, s2 review.Summary) bool {
 	return (s1.ID == s2.ID &&
 		s1.CommitMsg == s2.CommitMsg &&
 		s1.Submitter == s2.Submitter &&
-		s1.SubmittedAt.Equal(s2.SubmittedAt) &&
-		s1.UpdatedAt.Equal(s2.UpdatedAt) &&
 		s1.Repository == s2.Repository &&
 		s1.Status == s2.Status)
 
