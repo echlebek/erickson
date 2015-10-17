@@ -165,10 +165,10 @@ func TestCRUD(t *testing.T) {
 	if sumLen := len(summaries); sumLen != 2 {
 		t.Fatalf("wrong number of review summaries: got %d, want 2", sumLen)
 	}
-	if summaries[0] != mockReview.Summary {
+	if !summaryEq(summaries[0], mockReview.Summary) {
 		t.Errorf("wrong review summary: got %#v, want %#v", summaries[0], mockReview.Summary)
 	}
-	if summaries[1] != mockReview2.Summary {
+	if !summaryEq(summaries[1], mockReview2.Summary) {
 		t.Errorf("wrong review summary: got %#v, want %#v", summaries[1], mockReview.Summary)
 	}
 
@@ -183,7 +183,7 @@ func TestCRUD(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if summaries[1] != newSum {
+	if !summaryEq(summaries[1], newSum) {
 		t.Errorf("wrong review summary: got %#v, want %#v", summaries[1], newSum)
 	}
 
@@ -277,6 +277,8 @@ func summaryEq(s1, s2 review.Summary) bool {
 	return (s1.ID == s2.ID &&
 		s1.CommitMsg == s2.CommitMsg &&
 		s1.Submitter == s2.Submitter &&
+		s1.SubmittedAt.Equal(s2.SubmittedAt) &&
+		s1.UpdatedAt.Equal(s2.UpdatedAt) &&
 		s1.Repository == s2.Repository &&
 		s1.Status == s2.Status)
 
