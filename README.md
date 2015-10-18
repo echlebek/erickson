@@ -1,6 +1,8 @@
 # erickson
 [![Build Status](https://api.travis-ci.org/echlebek/erickson.svg)](https://api.travis-ci.org/echlebek/erickson)
 
+![Screenshot](/../screenshots/screenshots/screenshot_1.png?raw=true "Annotating a review")
+
 Erickson is a simple code review app. Code reviews are created via
 the API methods, or the web frontend.
 
