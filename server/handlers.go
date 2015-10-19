@@ -71,6 +71,11 @@ func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err500, 500)
 		return
 	}
+	username, ok := session.Values["username"]
+	if !ok {
+		http.Error(w, err500, 500)
+		return
+	}
 	review, err := ctx.db.GetReview(ctx.review)
 	if err != nil {
 		http.NotFound(w, req)
@@ -88,16 +93,18 @@ func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
 	}
 	wrap := struct {
 		resource.Review
-		Stylesheets map[string]http.Handler
-		Scripts     map[string]http.Handler
-		CSRFField   template.HTML
-		Session     *sessions.Session
+		Stylesheets       map[string]http.Handler
+		Scripts           map[string]http.Handler
+		CSRFField         template.HTML
+		Session           *sessions.Session
+		ReviewOwnedByUser bool
 	}{
 		res,
 		assets.StylesheetHandlers,
 		assets.ScriptHandlers,
 		csrf.TemplateField(req),
 		session,
+		review.Submitter == username,
 	}
 	if err := assets.Templates["review.html"].Execute(w, wrap); err != nil {
 		log.Println(err)
@@ -245,6 +252,18 @@ func postFormReview(ctx context, w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "couldn't parse form", 400)
 		return
 	}
+	session, err := ctx.store.Get(req, SessionName)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err500, 500)
+		return
+	}
+	username, ok := session.Values["username"].(string)
+	if !ok {
+		log.Println("session doesn't contain a valid username")
+		http.Error(w, err500, 500)
+		return
+	}
 	raw := req.FormValue("diff")
 	files, err := diff.ParseFiles(raw)
 	if err != nil {
@@ -255,7 +274,7 @@ func postFormReview(ctx context, w http.ResponseWriter, req *http.Request) {
 	r := review.R{
 		Summary: review.Summary{
 			CommitMsg:   req.FormValue("commitmsg"),
-			Submitter:   req.FormValue("username"),
+			Submitter:   username,
 			Repository:  req.FormValue("repository"),
 			SubmittedAt: time.Now(),
 			Status:      review.Open,

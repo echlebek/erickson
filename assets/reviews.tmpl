@@ -39,6 +39,7 @@
 			<div class="container bg-base3 base02 border rounded mt4 p2 create-review hidden" id="create-review">
 				<h3>Create a new review by uploading a diff.</h3>
 				<form method="post" action="/reviews">
+					{{ .CSRFField }}
 					<!-- Hidden textarea we load the diff into -->
 					<textarea style="display: none;" name="diff" id="diff"></textarea>
 					<div class="p2">
@@ -49,11 +50,9 @@
 							</div>
 						</span>
 						<input class="m1 block col-12 field" type="text" name="commitmsg" placeholder="Commit Message">
-						<input class="m1 block col-12 field" type="text" name="username" placeholder="User Name">
 						<input class="m1 block col-12 field" type="text" name="repository" placeholder="Repository Name">
 						<button type="submit" class="m1 btn btn-outline">Submit</button> 
 					</div>
-					{{ .CSRFField }}
 				</form>
 			</div>
 			<div class="container base02 bg-base3 border rounded mt4 p2">
@@ -82,9 +81,9 @@
 							<td class="align-middle"><span id="status-{{$i}}" class="label {{$v.StatusLabel}}">{{$v.Status}}</span></td>
 						</tr>
 						{{end}}
-						<tbody>
-						</table>
-					</div>
-				</div>
-			</body>
-		</html>
+					<tbody>
+				</table>
+			</div>
+		</div>
+	</body>
+</html>
