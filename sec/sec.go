@@ -2,37 +2,16 @@ package sec
 
 import (
 	"crypto/rand"
-	"encoding/base64"
-	"encoding/json"
 	"errors"
 
 	"golang.org/x/crypto/scrypt"
 )
 
-type Base64 string
-
-func (b Base64) MarshalJSON() ([]byte, error) {
-	enc := base64.StdEncoding
-	result := enc.EncodeToString([]byte(b))
-	return json.Marshal(result)
-}
-
-func (b *Base64) UnmarshalJSON(src []byte) error {
-	enc := base64.StdEncoding
-	var stringsrc string
-	if err := json.Unmarshal(src, &stringsrc); err != nil {
-		return err
-	}
-	result, err := enc.DecodeString(stringsrc)
-	*b = Base64(result)
-	return err
-}
-
 // Credentials holds a user's hashed password and salt.
 type Credentials struct {
-	Name           string `json:"name"`
-	Salt           Base64 `json:"salt"`
-	HashedPassword Base64 `json:"hashedPassword"`
+	Name           string
+	Salt           string
+	HashedPassword string
 }
 
 var ErrPasswordTooShort = errors.New("passwords must be at least 8 bytes long")
@@ -58,12 +37,12 @@ func NewCredentials(username string, password string) (Credentials, error) {
 	if _, err := rand.Read(salt); err != nil {
 		return u, err
 	}
-	u.Salt = Base64(salt)
+	u.Salt = string(salt)
 	hashed, err := scrypt.Key([]byte(password), salt, n, p, r, keySize)
 	if err != nil {
 		return u, err
 	}
-	u.HashedPassword = Base64(hashed)
+	u.HashedPassword = string(hashed)
 	return u, nil
 }
 

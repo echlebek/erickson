@@ -1,7 +1,8 @@
 package db
 
 import (
-	"encoding/json"
+	"bytes"
+	"encoding/gob"
 	"sort"
 	"strconv"
 
@@ -58,7 +59,8 @@ func getMetaData(tx *bolt.Tx) (metaData, error) {
 		return meta, ErrNoDB
 	}
 	metaValue := root.Get(metaKey)
-	err := json.Unmarshal(metaValue, &meta)
+	dec := gob.NewDecoder(bytes.NewReader(metaValue))
+	err := dec.Decode(&meta)
 	return meta, err
 }
 
@@ -67,11 +69,12 @@ func setMetaData(tx *bolt.Tx, meta metaData) error {
 	if root == nil {
 		return ErrNoDB
 	}
-	metaValue, err := json.Marshal(meta)
-	if err != nil {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	if err := enc.Encode(meta); err != nil {
 		return err
 	}
-	return root.Put(metaKey, metaValue)
+	return root.Put(metaKey, buf.Bytes())
 }
 
 func NewBoltDB(path string) (*BoltDB, error) {
@@ -131,11 +134,12 @@ func (db *BoltDB) CreateReview(r review.R) (int, error) {
 		if err := setMetaData(tx, meta); err != nil {
 			return err
 		}
-		revisionsValue, err := json.Marshal(r.Revisions)
-		if err != nil {
+		var buf bytes.Buffer
+		enc := gob.NewEncoder(&buf)
+		if err := enc.Encode(r.Revisions); err != nil {
 			return err
 		}
-		return newReview.Put(revisionsKey, revisionsValue)
+		return newReview.Put(revisionsKey, buf.Bytes())
 	})
 	return int(reviewID), err
 }
@@ -177,7 +181,8 @@ func getReview(tx *bolt.Tx, id int) (review.R, error) {
 	}
 	review.Summary = metaData.Summaries[strconv.Itoa(id)]
 	rev := reviewBkt.Get(revisionsKey)
-	if err := json.Unmarshal(rev, &revisions); err != nil {
+	dec := gob.NewDecoder(bytes.NewReader(rev))
+	if err := dec.Decode(&revisions); err != nil {
 		return review, err
 	}
 	review.Revisions = revisions
@@ -256,7 +261,6 @@ func reviewBucketErr(id int, err error) error {
 }
 
 func (db *BoltDB) AddRevision(id int, revision review.Revision) error {
-	// FIXME: Might be expensive. Give revisions its own bucket if this is too slow.
 	return db.Update(func(tx *bolt.Tx) error {
 		var revisions []review.Revision
 		reviewBkt, err := getReviewBucket(tx, id)
@@ -265,16 +269,18 @@ func (db *BoltDB) AddRevision(id int, revision review.Revision) error {
 		}
 		revisionsValue := reviewBkt.Get(revisionsKey)
 		if revisionsValue != nil {
-			if err := json.Unmarshal(revisionsValue, &revisions); err != nil {
+			dec := gob.NewDecoder(bytes.NewReader(revisionsValue))
+			if err := dec.Decode(&revisions); err != nil {
 				return err
 			}
 		}
 		revisions = append(revisions, revision)
-		revisionsValue, err = json.Marshal(revisions)
-		if err != nil {
+		var buf bytes.Buffer
+		enc := gob.NewEncoder(&buf)
+		if err := enc.Encode(revisions); err != nil {
 			return err
 		}
-		return reviewBkt.Put(revisionsKey, revisionsValue)
+		return reviewBkt.Put(revisionsKey, buf.Bytes())
 	})
 }
 
@@ -287,18 +293,20 @@ func (db *BoltDB) UpdateRevision(id, revId int, revision review.Revision) error 
 		}
 		var revisions []review.Revision
 		revisionsValue := reviewBkt.Get(revisionsKey)
-		if err := json.Unmarshal(revisionsValue, &revisions); err != nil {
+		dec := gob.NewDecoder(bytes.NewReader(revisionsValue))
+		if err := dec.Decode(&revisions); err != nil {
 			return err
 		}
 		if revId >= len(revisions) {
 			return ErrNoRevision(revId)
 		}
 		revisions[revId] = revision
-		revisionsValue, err = json.Marshal(revisions)
-		if err != nil {
+		var buf bytes.Buffer
+		enc := gob.NewEncoder(&buf)
+		if err := enc.Encode(revisions); err != nil {
 			return err
 		}
-		return reviewBkt.Put(revisionsKey, revisionsValue)
+		return reviewBkt.Put(revisionsKey, buf.Bytes())
 	})
 }
 
@@ -324,11 +332,12 @@ func (db *BoltDB) CreateUser(u review.User) error {
 		if userValue := userBkt.Get([]byte(u.Name)); userValue != nil {
 			return ErrUserExists
 		}
-		userValue, err := json.Marshal(u)
-		if err != nil {
+		var buf bytes.Buffer
+		enc := gob.NewEncoder(&buf)
+		if err := enc.Encode(u); err != nil {
 			return err
 		}
-		return userBkt.Put([]byte(u.Name), userValue)
+		return userBkt.Put([]byte(u.Name), buf.Bytes())
 	})
 }
 
@@ -341,11 +350,12 @@ func (db *BoltDB) UpdateUser(u review.User) error {
 		if userValue := userBkt.Get([]byte(u.Name)); userValue == nil {
 			return ErrNoUser
 		}
-		userValue, err := json.Marshal(u)
-		if err != nil {
+		var buf bytes.Buffer
+		enc := gob.NewEncoder(&buf)
+		if err := enc.Encode(u); err != nil {
 			return err
 		}
-		return userBkt.Put([]byte(u.Name), userValue)
+		return userBkt.Put([]byte(u.Name), buf.Bytes())
 	})
 }
 
@@ -359,7 +369,8 @@ func (db *BoltDB) GetUser(username string) (u review.User, err error) {
 		if userValue == nil {
 			return ErrNoUser
 		}
-		return json.Unmarshal(userValue, &u)
+		dec := gob.NewDecoder(bytes.NewReader(userValue))
+		return dec.Decode(&u)
 	})
 	return
 }
