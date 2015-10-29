@@ -1,127 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	{{ range $k, $v := .Stylesheets }}
-	<link rel="stylesheet" href="/assets/{{ $k }}">
-	{{ end }}
-
-	{{ range $k, $v := .Scripts }}
-	<script async="async" src="/assets/{{ $k }}"></script>
-	{{ end }}
-  </head>
-  <body class="bg-base01">
-	<!-- the html in <aside> will be inserted into the diff table via jquery -->
-	<aside class="hidden">
-	  <div class="bg-base2 base01 p2 border annotate-form">
-	    <pre class="line-text code-pre font-14"></pre>
-	    <br>
-	    <br>
-		<form method="post" action="/reviews/{{.ID}}/annotations">
-		  {{ .CSRFField }}
-		  <label for="comment">Leave a comment</label>
-		  <textarea name="comment" id="comment" class="monospace base01 bg-base3 block m1 pr3 field col-12"></textarea>
-		  <input id="file" class="hidden" name="file"></input>
-		  <input id="hunk" class="hidden" name="hunk"></input>
-		  <input id="line" class="hidden" name="line"></input>
-		  <button class="btn btn-outline">Post Comment</button>
-		  <div class="btn btn-outline" onClick="cancelAnnotate();">Cancel</div>
-	    </form>
-	  </div>
-	</aside>
-	<nav class="clearfix white bg-base02">
-	  <div class="sm-col">
-		<div class="menu-control">
-			<input class="hidden" id="show-menu" value="0" name="" type="checkbox"></input>
-			<label for="show-menu" class="h1 ml2 aqua border-round">&#9881;<span class="font-6"> &#9660;</span></label>
-			<a class="btn aqua mt1 mb1 ml1" href="/">Erickson Code Review</a>
-			<a class="btn aqua mt1 mb1" href="">Review {{.ID}} ({{.Status}})</a>
-		</div>
-	  </div>
-	  <div class="sm-col-right align-middle">
-	  {{ if .ReviewOwnedByUser }}
-	  {{ if .StatusOpen }}
-	    <span>
-		<form style="float: left;" method="post" action="/reviews/{{.ID}}/status">
-		  <button name="status" value="Submitted" class="btn btn-outline mt1 mb1 mr1 btn-submit">Submit Review</button>
-		  {{ .CSRFField }}
-		</form>
-		<form style="float: right;" method="post" action="/reviews/{{.ID}}/status">
-		  <button name="status" value="Discarded" class="btn btn-outline mt1 mb1 mr1 btn-discard">Discard Review</button>
-		  {{ .CSRFField }}
-		</form>
-	    </span>
-	  {{ else }}
-		<form method="post" action="/reviews/{{.ID}}/status">
-	      <button name="status" value="Open" class="btn btn-outline mt1 mb1 mr1 btn-reopen">Re-open Review</button>
-		  {{ .CSRFField }}
-		</form>
-	  {{ end }}
-	  {{ end }}
-	  </div>
-	</nav>
-	<div id="menu" class="menu hidden clearfix bg-base02">
-		<div class="sm-col">
-			<p class="aqua mt2 ml2">{{index .Session.Values "username" }}</p>
-			<form action="/logout" method="post">
-				{{ .CSRFField }}
-				<button class="aqua ml2 mb2 btn btn-outline">Log Out</button>
-			</form>
-		</div>
-	</div>
-	<div class="code-tables">
-      {{ range $r, $revision := .R.Revisions }}
-	  <a href="#/rev/{{ $r }}" class="btn btn-outline base3">Revision {{ $r }}</a>
-      {{ range $i, $f := $revision.Files }}
-	  <table class="table table-condensed rounded-top mb1 mt1" id="diff">
-		<tr class="rounded-top">
-			<th colspan="2" class="rounded-top h5 bg-red"><pre class="bold inline"><code>--- {{ $f.OldName }}</code></pre></td>
-			<th colspan="2" class="rounded-top h5 bg-green"><pre class="bold inline"><code>+++ {{ $f.NewName }}</code></pre></td>
-		</th>
-        {{ range $j, $hunk := $f.Hunks }}
-        {{ range $k, $lhs := $hunk.LHS }}
-		<tr class="diffline" id="diff-{{$i}}-{{$j}}-{{$k}}" >
-		  <td class="lineno lineno-lhs {{ (index $hunk.LHS $k).Type }}">
-			<pre class="code-pre h6"><code> {{ (index $hunk.LHS $k).Line }}</code></pre>
-          </td>
-          <td class="line {{ (index $hunk.LHS $k).Type }}">
-            <pre class="code-pre h6"><code> {{ (index $hunk.LHS $k).Text }}</code></pre>
-		  </td>
-		  <td class="lineno lineno-rhs {{ (index $hunk.RHS $k).Type }}">
-            <pre class="code-pre h6"><code> {{ (index $hunk.RHS $k).Line }}</code></pre>
-          </td>
-          <td class="line {{ (index $hunk.RHS $k).Type }}">
-            <pre class="code-pre h6"><code> {{(index $hunk.RHS $k).Text }}</code></pre>
-          </td>
-	  	</tr>
-		{{ if ($revision.GetAnnotations $i $j $k) }}
-		<tr>
-		  <td colspan="4">
-			<div class="bg-base2 px1 pt1 border">
-			  <p class="bold h4 regular mt1">{{ $f.NewName }}:{{ (index $hunk.RHS $k).Line }}</p>
-			  {{ range $a, $annotation := ($revision.GetAnnotations $i $j $k) }}
-			  <p class="m1">{{ $annotation.User }} says:</p>
-		      <div class="bg-base3 p1 mb1 border rounded">
-			    <pre class="code-pre h6"><code> {{ $annotation.Comment }}</code></pre>
-			    <br>
-			  </div>
-			  {{ end }}
-			</div>
-		  </td>
-	    </tr>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		{{ range $k, $v := .Stylesheets }}
+		<link rel="stylesheet" href="/assets/{{ $k }}">
 		{{ end }}
-        {{ end }}
-        <tr>
-          <td class="lineno"></td>
-          <td class="line unchanged"></td>
-          <td class="lineno"></td>
-          <td class="line unchanged"></td>
-        </tr>
-        {{ end }}
-      </table>
-      {{ end }}
-      {{ end }}
-    </div>
-  </div>
-</body>
+		{{ range $k, $v := .Scripts }}
+		<script async="async" src="/assets/{{ $k }}"></script>
+		{{ end }}
+	</head>
+	<body class="bg-base01">
+		<!-- the html in <aside> will be inserted into the diff table via jquery -->
+		<aside class="hidden">
+			  <div class="bg-base2 base01 p2 border annotate-form">
+				<pre class="line-text code-pre font-14"></pre>
+				<br>
+				<br>
+				<form method="post" action="/reviews/{{.ID}}/annotations">
+					{{ .CSRFField }}
+					<label for="comment">Leave a comment</label>
+					<textarea name="comment" id="comment" class="monospace base01 bg-base3 block m1 pr3 field col-12"></textarea>
+					<input id="file" class="hidden" name="file"></input>
+					<input id="hunk" class="hidden" name="hunk"></input>
+					<input id="line" class="hidden" name="line"></input>
+					<button class="btn btn-outline">Post Comment</button>
+					<div class="btn btn-outline" onClick="cancelAnnotate();">Cancel</div>
+				</form>
+			  </div>
+		</aside>
+		<nav class="clearfix white bg-base02">
+			<div class="sm-col">
+				<div class="menu-control">
+					<input class="hidden" id="show-menu" value="0" name="" type="checkbox"></input>
+					<label for="show-menu" class="h1 ml2 aqua border-round">&#9881;<span class="font-6"> &#9660;</span></label>
+					<a class="btn aqua mt1 mb1 ml1" href="/">Erickson Code Review</a>
+					<a class="btn aqua mt1 mb1" href="">Review {{.ID}} ({{.Status}})</a>
+				</div>
+			</div>
+			<div class="sm-col-right align-middle">
+				{{ if .ReviewOwnedByUser }}
+				{{ if .StatusOpen }}
+				<span>
+					<form style="float: left;" method="post" action="/reviews/{{.ID}}/status">
+						<button name="status" value="Submitted" class="btn btn-outline mt1 mb1 mr1 btn-submit">Submit Review</button>
+						{{ .CSRFField }}
+					</form>
+					<form style="float: right;" method="post" action="/reviews/{{.ID}}/status">
+						<button name="status" value="Discarded" class="btn btn-outline mt1 mb1 mr1 btn-discard">Discard Review</button>
+						{{ .CSRFField }}
+					</form>
+				</span>
+				{{ else }}
+				<form method="post" action="/reviews/{{.ID}}/status">
+					<button name="status" value="Open" class="btn btn-outline mt1 mb1 mr1 btn-reopen">Re-open Review</button>
+					{{ .CSRFField }}
+				</form>
+				{{ end }}
+				{{ end }}
+			</div>
+		</nav>
+		<div id="menu" class="menu hidden clearfix bg-base02">
+			<div class="sm-col">
+				<p class="aqua mt2 ml2">{{index .Session.Values "username" }}</p>
+				<form action="/logout" method="post">
+					{{ .CSRFField }}
+					<button class="aqua ml2 mb2 btn btn-outline">Log Out</button>
+				</form>
+			</div>
+		</div>
+		<div class="h6 col-6 bold rounded m1 p2 bg-base2">
+			<h3 class="h3 base01 mt0">Commit Log</h3>
+			<pre class="border p1 bg-base3 border-thin regular h6">{{ .R.CommitMsg }}</pre>
+		</div>
+		<div class="code-tables">
+			{{ range $r, $revision := .R.Revisions }}
+			<a href="#/rev/{{ $r }}" class="btn btn-outline base3">Revision {{ $r }}</a>
+			{{ range $i, $f := $revision.Files }}
+			<table class="table table-condensed rounded-top mb1 mt1" id="diff">
+				<tr class="rounded-top">
+					<td colspan="2" class="rounded-top h5 bg-red"><pre class="bold inline"><code> --- {{ $f.OldName }}</code></pre></td>
+					<td colspan="2" class="rounded-top h5 bg-green"><pre class="bold inline"><code> +++ {{ $f.NewName }}</code></pre></td>
+				</tr>
+				{{ range $j, $hunk := $f.Hunks }}
+				{{ range $k, $lhs := $hunk.LHS }}
+				<tr class="diffline" id="diff-{{$i}}-{{$j}}-{{$k}}" >
+					<td class="bold lineno lineno-lhs {{ (index $hunk.LHS $k).Type }}">
+						<pre class="code-pre h6"><code> {{ (index $hunk.LHS $k).Line }}</code></pre>
+					</td>
+					<td class="line {{ (index $hunk.LHS $k).Type }}">
+						<pre class="code-pre h6"><code> {{ (index $hunk.LHS $k).Text }}</code></pre>
+					</td>
+					<td class="bold lineno lineno-rhs {{ (index $hunk.RHS $k).Type }}">
+						<pre class="code-pre h6"><code> {{ (index $hunk.RHS $k).Line }}</code></pre>
+					</td>
+					<td class="line {{ (index $hunk.RHS $k).Type }}">
+						<pre class="code-pre h6"><code> {{(index $hunk.RHS $k).Text }}</code></pre>
+					</td>
+				</tr>
+				{{ if ($revision.GetAnnotations $i $j $k) }}
+				<tr>
+					<td colspan="4">
+						<div class="bg-base2 px1 pt1 border">
+							<p class="bold h4 regular mt1">{{ $f.NewName }}:{{ (index $hunk.RHS $k).Line }}</p>
+							{{ range $a, $annotation := ($revision.GetAnnotations $i $j $k) }}
+							<p class="m1">{{ $annotation.User }} says:</p>
+							<div class="bg-base3 p1 mb1 border rounded">
+								<pre class="code-pre h6"><code> {{ $annotation.Comment }}</code></pre>
+								<br>
+							</div>
+							{{ end }}
+						</div>
+					</td>
+				</tr>
+				{{ end }}
+				{{ end }}
+				<tr>
+					<td class="lineno"></td>
+					<td class="line unchanged"></td>
+					<td class="lineno"></td>
+					<td class="line unchanged"></td>
+				</tr>
+				{{ end }}
+			</table>
+			{{ end }}
+			{{ end }}
+		</div>
+	</body>
 </html>
