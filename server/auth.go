@@ -108,3 +108,7 @@ func postLogout(ctx context, w http.ResponseWriter, req *http.Request) {
 	http.SetCookie(w, cookie)
 	http.Redirect(w, req, "/", http.StatusSeeOther)
 }
+
+func getCsrfToken(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("X-CSRF-Token", csrf.Token(req))
+}
