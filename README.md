@@ -4,23 +4,52 @@
 ![Screenshot](/../screenshots/screenshots/screenshot_1.png?raw=true "Annotating a review")
 
 Erickson is a simple code review app. Code reviews are created via
-the API methods, or the web frontend.
+a command-line client, or the web frontend.
 
-Once a review is created, annotations can be made to the diff, and
-successive versions of the diff can be appended to the original review.
+Rationale
+---------
+I wanted to show what could be accomplished in web-programming on the server side
+with Go, with minimal dependencies and complexity. Erickson is both a functional
+application, and a testbed for exploring my own ideals in software development.
 
-Erickson is a work in progress and many features are incomplete, missing
-or broken.
+Submitting a code review to erickson with git
+---------------------------------------------
+From within the repository you wish you review code:
 
-Project goals:
+    git erickson post HEAD^...
+
+The arguments to `git erickson post` are the same arguments you'd supply to `git diff`.
+
+Working with code reviews
+-------------------------
+When a review is created, the command line app returns a link to the review.
+Users can annotate the review, and the owner can mark it as submitted or discarded.
+
+Notes
+-----
+Erickson is pre-alpha software and may not be suitable for running in production.
+Although it implements TLS, CSRF protection and secure sessions, these features
+have not been vetted by a security professional. Use at your own risk.
+
+Project goals
+-------------
 * Dead-simple setup that doesn't require integration with other services.
-* A standalone binary that doesn't require an installer or asset files.
-* A simple, lightweight UI that requires minimal JS.
-* A small feature-set that is robust and reliable.
+* Produces a standalone binary that doesn't require an installer or asset files.
+* Simple, lightweight UI that requires minimal JS.
+* Small feature-set that is robust and reliable.
+* A very fast server.
 
-TODO:
-* Write a command-line tool for submitting and updating reviews
-* Add more support for revisions
-* Consider removing jQuery
-* Improve test coverage
-* SCM-specific tools
+Open Questions
+--------------
+How should erickson support notifications? E-mail? Tweets? Not sure yet.
+
+TODO
+----
+[x] CRUD app that supports the essentials of working with code reviews.
+[x] Side-by-side diff display, rendered as HTML.
+[x] UI for annotations.
+[x] Git plugin for submitting reviews.
+[ ] Mercurial plugin for submitting reviews.
+[ ] Add support for revising reviews. (Partially done in the persistence layer)
+[ ] Remove jQuery and use plain old javascript.
+[ ] 100% test coverage.
