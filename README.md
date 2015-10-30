@@ -45,11 +45,11 @@ How should erickson support notifications? E-mail? Tweets? Not sure yet.
 
 TODO
 ----
-[x] CRUD app that supports the essentials of working with code reviews.
-[x] Side-by-side diff display, rendered as HTML.
-[x] UI for annotations.
-[x] Git plugin for submitting reviews.
-[ ] Mercurial plugin for submitting reviews.
-[ ] Add support for revising reviews. (Partially done in the persistence layer)
-[ ] Remove jQuery and use plain old javascript.
-[ ] 100% test coverage.
+- [x] CRUD app that supports the essentials of working with code reviews.
+- [x] Side-by-side diff display, rendered as HTML.
+- [x] UI for annotations.
+- [x] Git plugin for submitting reviews.
+- [ ] Mercurial plugin for submitting reviews.
+- [ ] Add support for revising reviews. (Partially done in the persistence layer)
+- [ ] Remove jQuery and use plain old javascript.
+- [ ] 100% test coverage.
