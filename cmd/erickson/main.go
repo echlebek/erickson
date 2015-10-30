@@ -29,11 +29,14 @@ type serverCfg struct {
 }
 
 var config = serverCfg{
-	Database:   "erickson.db",
+	Database: "erickson.db",
+
+	// SessionKey should be a 32 byte random key
 	SessionKey: "12345678901234567890123456789012",
-	TLSCert:    "server.crt",
-	TLSKey:     "server.key",
-	Port:       "8080",
+
+	TLSCert: "example.crt",
+	TLSKey:  "example.key",
+	Port:    "8080",
 }
 
 func exec() {
