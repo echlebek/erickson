@@ -31,6 +31,13 @@ type context struct {
 	fsRoot string
 
 	store *sessions.CookieStore
+
+	// The request lead to auth failure. This is here because
+	// I want to call getLogin after postLogin fails, but I don't
+	// have any way for getLogin to know about the failure.
+	// badAuth is passed to the template executor, so that the
+	// page can show that the login failed.
+	badAuth bool
 }
 
 // authHandler checks the user's session before proceeding with the request.

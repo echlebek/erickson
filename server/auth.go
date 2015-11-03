@@ -52,8 +52,8 @@ func getLogin(ctx context, w http.ResponseWriter, req *http.Request) {
 		Stylesheets map[string]http.Handler
 		Scripts     map[string]http.Handler
 		CSRFField   template.HTML
-		AuthFailure bool
-	}{assets.StylesheetHandlers, assets.ScriptHandlers, csrf.TemplateField(req), false}
+		BadAuth     bool // The previous request was a failed login attempt
+	}{assets.StylesheetHandlers, assets.ScriptHandlers, csrf.TemplateField(req), ctx.badAuth}
 	if err := assets.Templates["login.html"].Execute(w, wrap); err != nil {
 		log.Println(err)
 		http.Error(w, err500, 500)
@@ -72,17 +72,23 @@ func postLogin(ctx context, w http.ResponseWriter, req *http.Request) {
 
 	user, err := ctx.db.GetUser(username)
 	if err != nil {
-		http.Error(w, "bad credentials", 401)
+		w.WriteHeader(http.StatusUnauthorized)
+		ctx.badAuth = true
+		getLogin(ctx, w, req)
 		return
 	}
 	if ok, err := user.Authenticate(password); err != nil {
-		http.Error(w, "bad credentials", 401)
+		log.Println(err)
+		w.WriteHeader(http.StatusUnauthorized)
+		ctx.badAuth = true
+		getLogin(ctx, w, req)
 		return
 	} else if !ok {
-		http.Redirect(w, req, "/login", http.StatusSeeOther)
+		w.WriteHeader(http.StatusUnauthorized)
+		ctx.badAuth = true
+		getLogin(ctx, w, req)
 		return
 	}
-
 	session, err := ctx.store.Get(req, SessionName)
 	if err != nil {
 		log.Println(err)
