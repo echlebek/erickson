@@ -27,6 +27,9 @@
 					<label for="password">Password</label>
 					<input class="m1 block col-3 field" type="password" name="password" placeholder="At least 8 characters" required>
 					<button type="submit" class="m1 btn btn-outline">Submit</button> 
+					{{ if .BadAuth }}
+					<h3 class="m1 h3 regular darkred">Access Denied</h3>
+					{{ end }}
 				</div>
 				<p>Don't have an account? <a href="/signup">Sign Up</a></p>
 			</form>
