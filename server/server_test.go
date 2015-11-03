@@ -201,6 +201,14 @@ func newClient(t *testing.T, host string) *http.Client {
 	if response.StatusCode != 401 {
 		t.Error("want status 401")
 	}
+	authInfo = url.Values{"username": {"baduser"}, "password": {"badpassword"}}
+	response, err = c.PostForm(host+"/login", authInfo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.StatusCode != 401 {
+		t.Error("want status 401")
+	}
 	authInfo = url.Values{"username": {"testuser"}, "password": {"testpassword"}}
 	response, err = c.PostForm(host+"/login", authInfo)
 	if err != nil {
