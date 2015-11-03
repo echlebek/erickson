@@ -193,8 +193,16 @@ func newClient(t *testing.T, host string) *http.Client {
 		InsecureSkipVerify: true,
 	}
 	c := &http.Client{Jar: jar, Transport: transport}
-	authInfo := url.Values{"username": {"testuser"}, "password": {"testpassword"}}
+	authInfo := url.Values{"username": {"testuser"}, "password": {"badpassword"}}
 	response, err := c.PostForm(host+"/login", authInfo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.StatusCode != 401 {
+		t.Error("want status 401")
+	}
+	authInfo = url.Values{"username": {"testuser"}, "password": {"testpassword"}}
+	response, err = c.PostForm(host+"/login", authInfo)
 	if err != nil {
 		t.Fatal(err)
 	}
