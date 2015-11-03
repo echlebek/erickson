@@ -56,9 +56,15 @@ func exec() {
 }
 
 func loadConfig(path string) {
-	if _, err := toml.DecodeFile(path, &config); err != nil {
+	cfg := struct {
+		Server serverCfg `toml:"server"`
+	}{}
+
+	if _, err := toml.DecodeFile(path, &cfg); err != nil {
 		log.Fatalf("couldn't parse config file: %s", err)
 	}
+
+	config = cfg.Server
 }
 
 func printConfigTemplate() {
