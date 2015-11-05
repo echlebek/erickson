@@ -43,6 +43,11 @@ Open Questions
 --------------
 How should erickson support notifications? E-mail? Tweets? Not sure yet.
 
+Mercurial Support
+-----------------
+Dimitri Tcaciuc has written a mercurial plugin for erickson.
+https://github.com/dtcaciuc/hgerickson
+
 TODO
 ----
 - [x] CRUD app that supports the essentials of working with code reviews.
