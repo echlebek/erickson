@@ -9,17 +9,17 @@
 		<script async="async" src="/assets/{{ $k }}"></script>
 		{{ end }}
 	</head>
-	<body class="bg-base01">
+	<body class="bg-base02">
 		<!-- the html in <aside> will be inserted into the diff table via jquery -->
 		<aside class="hidden">
-			  <div class="bg-base2 base01 p2 border annotate-form">
+			  <div class="bg-base02 aqua p2 annotate-form">
 				<pre class="line-text code-pre font-14"></pre>
 				<br>
 				<br>
 				<form method="post" action="/reviews/{{.ID}}/annotations">
 					{{ .CSRFField }}
 					<label for="comment">Leave a comment</label>
-					<textarea name="comment" id="comment" class="monospace base01 bg-base3 block m1 pr3 field col-12"></textarea>
+					<textarea name="comment" id="comment" class="monospace aqua bg-base03 block m1 pr3 field col-12"></textarea>
 					<input id="file" class="hidden" name="file"></input>
 					<input id="hunk" class="hidden" name="hunk"></input>
 					<input id="line" class="hidden" name="line"></input>
@@ -28,13 +28,13 @@
 				</form>
 			  </div>
 		</aside>
-		<nav class="clearfix white bg-base02">
+		<nav class="white bg-base02 navbar">
 			<div class="sm-col">
 				<div class="menu-control">
 					<input class="hidden" id="show-menu" value="0" name="" type="checkbox"></input>
 					<label for="show-menu" class="h1 ml2 aqua border-round">&#9881;<span class="font-6"> &#9660;</span></label>
 					<a class="btn aqua mt1 mb1 ml1" href="/">Erickson Code Review</a>
-					<a class="btn aqua mt1 mb1" href="">Review {{.ID}} ({{.Status}})</a>
+					<a class="btn aqua mt1 mb1 regular" href="">Review {{.ID}} ({{.Status}})</a>
 				</div>
 			</div>
 			<div class="sm-col-right align-middle">
@@ -42,24 +42,24 @@
 				{{ if .StatusOpen }}
 				<span>
 					<form style="float: left;" method="post" action="/reviews/{{.ID}}/status">
-						<button name="status" value="Submitted" class="btn btn-outline mt1 mb1 mr1 btn-submit">Submit Review</button>
+						<button name="status" value="Submitted" class="btn btn-outline mt1 mb1 mr1 btn-submit regular">Submit Review</button>
 						{{ .CSRFField }}
 					</form>
 					<form style="float: right;" method="post" action="/reviews/{{.ID}}/status">
-						<button name="status" value="Discarded" class="btn btn-outline mt1 mb1 mr1 btn-discard">Discard Review</button>
+						<button name="status" value="Discarded" class="btn btn-outline mt1 mb1 mr1 btn-discard regular">Discard Review</button>
 						{{ .CSRFField }}
 					</form>
 				</span>
 				{{ else }}
 				<form method="post" action="/reviews/{{.ID}}/status">
-					<button name="status" value="Open" class="btn btn-outline mt1 mb1 mr1 btn-reopen">Re-open Review</button>
+					<button name="status" value="Open" class="btn btn-outline mt1 mb1 mr1 btn-reopen regular">Re-open Review</button>
 					{{ .CSRFField }}
 				</form>
 				{{ end }}
 				{{ end }}
 			</div>
 		</nav>
-		<div id="menu" class="menu hidden clearfix bg-base02">
+		<div id="menu" class="navbar-menu hidden px4 bg-base02">
 			<div class="sm-col">
 				<p class="aqua mt2 ml2">{{index .Session.Values "username" }}</p>
 				<form action="/logout" method="post">
@@ -68,7 +68,7 @@
 				</form>
 			</div>
 		</div>
-		<div class="h6 col-6 bold rounded m1 p2 bg-base2">
+		<div class="mt4 h6 col-6 bold rounded m1 p2 bg-base2">
 			<h3 class="h3 base01 mt0">Commit Log</h3>
 			<pre class="border p1 bg-base3 border-thin regular h6">{{ .R.CommitMsg }}</pre>
 		</div>

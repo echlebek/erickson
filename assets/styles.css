@@ -57,6 +57,10 @@ pre {
 }
 
 /* My own colours */
+.bg-ivory {
+	background-color: ivory;
+}
+
 .green {
 	color: #ccebc5;
 }
@@ -227,4 +231,24 @@ code {
 
 .menu-control label:hover {
 	cursor: pointer;
+}
+
+.navbar {
+	-webkit-box-shadow: -5px 5px 5px -2px rgba(0,0,0,0.30);
+	-moz-box-shadow: -5px 5px 5px -2px rgba(0,0,0,0.30);
+	box-shadow: -5px 5px 5px -2px rgba(0,0,0,0.30);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 998;
+    width: 100%;
+    min-width: 400px;
+}
+
+.navbar-menu {
+    z-index: 999;
+	box-shadow: 5px 5px 5px -2px rgba(0,0,0,0.30);
+	position: fixed;
+	top: 50px;
+	left: 0;
 }
