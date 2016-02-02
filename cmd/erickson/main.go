@@ -20,6 +20,10 @@ Usage:
   $ erickson config file.cfg  # Runs erickson with file.cfg as configuration
 `
 
+type Configuration struct {
+	Server serverCfg `toml:"server"`
+}
+
 type serverCfg struct {
 	Database   string `toml:"database"`
 	SessionKey string `toml:"session_key"`
@@ -28,50 +32,44 @@ type serverCfg struct {
 	Port       string `toml:"port"`
 }
 
-var config = serverCfg{
-	Database: "erickson.db",
+var config = Configuration{
+	Server: serverCfg{
+		Database: "erickson.db",
 
-	// SessionKey should be a 32 byte random key
-	SessionKey: "12345678901234567890123456789012",
+		// SessionKey should be a 32 byte random key
+		SessionKey: "12345678901234567890123456789012",
 
-	TLSCert: "example.crt",
-	TLSKey:  "example.key",
-	Port:    "8080",
+		TLSCert: "example.crt",
+		TLSKey:  "example.key",
+		Port:    "8080",
+	},
 }
 
 func exec() {
-	db, err := db.NewBoltDB(config.Database)
+	scfg := config.Server
+	db, err := db.NewBoltDB(scfg.Database)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	handler := server.NewRootHandler(db, ".", []byte(config.SessionKey))
-	if config.TLSCert != "" && config.TLSKey != "" && len(config.SessionKey) == 32 {
-		CSRF := csrf.Protect([]byte(config.SessionKey))
-		log.Fatal(http.ListenAndServeTLS(":"+config.Port, config.TLSCert, config.TLSKey, CSRF(handler)))
+	handler := server.NewRootHandler(db, ".", []byte(scfg.SessionKey))
+	if scfg.TLSCert != "" && scfg.TLSKey != "" && len(scfg.SessionKey) == 32 {
+		CSRF := csrf.Protect([]byte(scfg.SessionKey))
+		log.Fatal(http.ListenAndServeTLS(":"+scfg.Port, scfg.TLSCert, scfg.TLSKey, CSRF(handler)))
 	} else {
-		log.Fatal(http.ListenAndServe(":"+config.Port, handler))
+		log.Fatal(http.ListenAndServe(":"+scfg.Port, handler))
 	}
 }
 
 func loadConfig(path string) {
-	cfg := struct {
-		Server serverCfg `toml:"server"`
-	}{}
-
-	if _, err := toml.DecodeFile(path, &cfg); err != nil {
+	if _, err := toml.DecodeFile(path, &config); err != nil {
 		log.Fatalf("couldn't parse config file: %s", err)
 	}
-
-	config = cfg.Server
 }
 
 func printConfigTemplate() {
 	enc := toml.NewEncoder(os.Stdout)
-	config := struct { // Wrap config to give it a nice heading
-		Server serverCfg `toml:"server"`
-	}{config}
 	if err := enc.Encode(config); err != nil {
 		// Shouldn't ever happen, so make some noise
 		panic(err)
