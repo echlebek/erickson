@@ -12,7 +12,7 @@
 	<body class="bg-base02">
 		<!-- the html in <aside> will be inserted into the diff table via jquery -->
 		<aside class="hidden">
-			  <div class="bg-base02 aqua p2 annotate-form">
+			<div class="bg-base02 aqua p2 annotate-form">
 				<pre class="line-text code-pre font-14"></pre>
 				<br>
 				<br>
@@ -26,7 +26,7 @@
 					<button class="btn btn-outline">Post Comment</button>
 					<div class="btn btn-outline" onClick="cancelAnnotate();">Cancel</div>
 				</form>
-			  </div>
+			</div>
 		</aside>
 		<nav class="white bg-base02 navbar">
 			<div class="sm-col">
@@ -74,7 +74,7 @@
 		</div>
 		<div class="code-tables">
 			{{ range $r, $revision := .R.Revisions }}
-			<a href="#/rev/{{ $r }}" class="btn btn-outline base3">Revision {{ $r }}</a>
+			<a href="#/rev/{{ $r }}" class="btn regular mb1 base3">Revision {{ $r }}</a>
 			{{ range $i, $f := $revision.Files }}
 			<table class="table table-condensed rounded-top mb1 mt1" id="diff">
 				<tr class="rounded-top">
@@ -98,7 +98,7 @@
 					</td>
 				</tr>
 				{{ if ($revision.GetAnnotations $i $j $k) }}
-				<tr>
+				<tr class="annotation mb1">
 					<td colspan="4">
 						<div class="bg-base2 px1 pt1 border">
 							<p class="bold h4 regular mt1">{{ $f.NewName }}:{{ (index $hunk.RHS $k).Line }}</p>
