@@ -258,3 +258,8 @@ code {
 	z-index: 999;
 	position: relative;
 }
+
+.diffline {
+	margin-top: -1px;
+	margin-bottom: -1px;
+}

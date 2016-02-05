@@ -76,30 +76,30 @@
 			{{ range $r, $revision := .R.Revisions }}
 			<a href="#/rev/{{ $r }}" class="btn regular mb1 base3">Revision {{ $r }}</a>
 			{{ range $i, $f := $revision.Files }}
-			<table class="table table-condensed rounded-top mb1 mt1" id="diff">
-				<tr class="rounded-top">
-					<td colspan="2" class="rounded-top h5 bg-red"><pre class="bold inline"><code> --- {{ $f.OldName }}</code></pre></td>
-					<td colspan="2" class="rounded-top h5 bg-green"><pre class="bold inline"><code> +++ {{ $f.NewName }}</code></pre></td>
-				</tr>
+			<div class="flex rounded-top mb1 mt1" id="diff">
+				<div class="flex rounded-top">
+					<span class="flex-auto rounded-top h5 bg-red"><pre class="bold inline"><code> --- {{ $f.OldName }}</code></pre></span>
+					<span class="flex-auto rounded-top h5 bg-green"><pre class="bold inline"><code> +++ {{ $f.NewName }}</code></pre></span>
+				</div>
 				{{ range $j, $hunk := $f.Hunks }}
 				{{ range $k, $lhs := $hunk.LHS }}
-				<tr class="diffline" id="diff-{{$i}}-{{$j}}-{{$k}}" >
-					<td class="bold lineno lineno-lhs {{ (index $hunk.LHS $k).Type }}">
+				<div class="flex diffline" id="diff-{{$i}}-{{$j}}-{{$k}}" >
+					<span class="flex-auto bold lineno lineno-lhs {{ (index $hunk.LHS $k).Type }}">
 						<pre class="code-pre h6"><code> {{ (index $hunk.LHS $k).Line }}</code></pre>
-					</td>
-					<td class="line {{ (index $hunk.LHS $k).Type }}">
+					</span>
+					<span class="flex-auto line {{ (index $hunk.LHS $k).Type }}">
 						<pre class="code-pre h6"><code> {{ (index $hunk.LHS $k).Text }}</code></pre>
-					</td>
-					<td class="bold lineno lineno-rhs {{ (index $hunk.RHS $k).Type }}">
+					</span>
+					<span class="flex-auto bold lineno lineno-rhs {{ (index $hunk.RHS $k).Type }}">
 						<pre class="code-pre h6"><code> {{ (index $hunk.RHS $k).Line }}</code></pre>
-					</td>
-					<td class="line {{ (index $hunk.RHS $k).Type }}">
+					</span>
+					<span class="flex-auto line {{ (index $hunk.RHS $k).Type }}">
 						<pre class="code-pre h6"><code> {{(index $hunk.RHS $k).Text }}</code></pre>
-					</td>
-				</tr>
+					</span>
+				</div>
 				{{ if ($revision.GetAnnotations $i $j $k) }}
-				<tr class="annotation mb1">
-					<td colspan="4">
+				<div class="flex annotation mb1">
+					<span class="flex-auto">
 						<div class="bg-base2 px1 pt1 border">
 							<p class="bold h4 regular mt1">{{ $f.NewName }}:{{ (index $hunk.RHS $k).Line }}</p>
 							{{ range $a, $annotation := ($revision.GetAnnotations $i $j $k) }}
@@ -110,18 +110,18 @@
 							</div>
 							{{ end }}
 						</div>
-					</td>
-				</tr>
+					</span>
+				</div>
 				{{ end }}
 				{{ end }}
-				<tr>
-					<td class="lineno"></td>
-					<td class="line unchanged"></td>
-					<td class="lineno"></td>
-					<td class="line unchanged"></td>
-				</tr>
+				<div>
+					<span class="lineno"></span>
+					<span class="line unchanged"></span>
+					<span class="lineno"></span>
+					<span class="line unchanged"></span>
+				</div>
 				{{ end }}
-			</table>
+			</div>
 			{{ end }}
 			{{ end }}
 		</div>
