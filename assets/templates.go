@@ -17,7 +17,3 @@ func (t Template) Execute(w io.Writer, data interface{}) error {
 	tmpl := template.Must(template.New(t.asset.Name).Parse(t.asset.Content))
 	return tmpl.Execute(w, data)
 }
-
-func tmpl(a asset) Template {
-	return Template{asset: a}
-}

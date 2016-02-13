@@ -36,3 +36,7 @@ func css(a asset) asset {
 func js(a asset) asset {
 	return a
 }
+
+func tmpl(a asset) Template {
+	return Template{asset: a}
+}
