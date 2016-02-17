@@ -39,10 +39,6 @@ Project goals
 * Small feature-set that is robust and reliable.
 * A very fast server.
 
-Open Questions
---------------
-How should erickson support notifications? E-mail? Tweets? Not sure yet.
-
 Mercurial Support
 -----------------
 Dimitri Tcaciuc has written a mercurial plugin for erickson.
@@ -53,8 +49,9 @@ TODO
 - [x] CRUD app that supports the essentials of working with code reviews.
 - [x] Side-by-side diff display, rendered as HTML.
 - [x] UI for annotations.
-- [x] Git plugin for submitting reviews.
-- [ ] Mercurial plugin for submitting reviews.
+- [x] Git plugin for submitting reviews. (Bundled with erickson)
+- [x] Notifications (implemented via e-mail)
+- [x] Mercurial plugin for submitting reviews.
 - [ ] Add support for revising reviews. (Partially done in the persistence layer)
 - [ ] Remove jQuery and use plain old javascript.
 - [ ] 100% test coverage.
