@@ -1,3 +1,5 @@
+{{ $username := index .Session.Values "username" }}
+{{ $revision := index .R.Revisions .CurrentRevision }}
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -38,6 +40,14 @@
 				</div>
 			</div>
 			<div class="sm-col-right align-middle">
+				{{ if .UnpublishedAnnotations }}
+				<span>
+					<form style="float: left;" method="post" action="/reviews/{{.ID}}/rev/{{.CurrentRevision}}/annotations/publish">
+						<button name="status" value="Submitted" class="btn btn-outline mt1 mb1 mr1 btn-submit regular">Post Comments ({{.UnpublishedAnnotations}})</button>
+						{{ .CSRFField }}
+					</form>
+				</span>
+				{{ end }}
 				{{ if .ReviewOwnedByUser }}
 				{{ if .StatusOpen }}
 				<span>
@@ -61,7 +71,7 @@
 		</nav>
 		<div id="menu" class="navbar-menu hidden px4 bg-base02">
 			<div class="sm-col">
-				<p class="aqua mt2 ml2">{{index .Session.Values "username" }}</p>
+				<p class="aqua mt2 ml2">{{$username}}</p>
 				<form action="/logout" method="post">
 					{{ .CSRFField }}
 					<button class="aqua ml2 mb2 btn btn-outline">Log Out</button>
@@ -73,8 +83,10 @@
 			<pre class="border p1 bg-base3 border-thin regular h6">{{ .R.CommitMsg }}</pre>
 		</div>
 		<div class="code-tables">
-			{{ range $r, $revision := .R.Revisions }}
+			{{ range $r, $rev := .R.Revisions }}
 			<a href="#/rev/{{ $r }}" class="btn regular mb1 base3">Revision {{ $r }}</a>
+			{{ end }}
+			{{ $revision := $revision }}
 			{{ range $i, $f := $revision.Files }}
 			<div class="flex rounded-top mb1 mt1" id="diff">
 				<div class="flex rounded-top">
@@ -82,7 +94,7 @@
 					<span class="flex-auto rounded-top h5 bg-green"><pre class="bold inline"><code> +++ {{ $f.NewName }}</code></pre></span>
 				</div>
 				{{ range $j, $hunk := $f.Hunks }}
-				{{ range $k, $lhs := $hunk.LHS }}
+				{{ range $k, $lhs := .LHS }}
 				<div class="flex diffline" id="diff-{{$i}}-{{$j}}-{{$k}}" >
 					<span class="flex-auto bold lineno lineno-lhs {{ (index $hunk.LHS $k).Type }}">
 						<pre class="code-pre h6"><code> {{ (index $hunk.LHS $k).Line }}</code></pre>
@@ -97,12 +109,12 @@
 						<pre class="code-pre h6"><code> {{(index $hunk.RHS $k).Text }}</code></pre>
 					</span>
 				</div>
-				{{ if ($revision.GetAnnotations $i $j $k) }}
-				<div class="flex annotation mb1">
+				{{ if ($revision.GetAnnotations $i $j $k $username) }}
+				<div class="flex annotation mb0">
 					<span class="flex-auto">
 						<div class="bg-base2 px1 pt1 border">
 							<p class="bold h4 regular mt1">{{ $f.NewName }}:{{ (index $hunk.RHS $k).Line }}</p>
-							{{ range $a, $annotation := ($revision.GetAnnotations $i $j $k) }}
+							{{ range $a, $annotation := ($revision.GetAnnotations $i $j $k $username) }}
 							<p class="m1">{{ $annotation.User }} says:</p>
 							<div class="bg-base3 p1 mb1 border rounded">
 								<pre class="code-pre h6"><code> {{ $annotation.Comment }}</code></pre>
@@ -122,7 +134,6 @@
 				</div>
 				{{ end }}
 			</div>
-			{{ end }}
 			{{ end }}
 		</div>
 	</body>

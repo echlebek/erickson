@@ -15,9 +15,9 @@ type ReviewSummary struct {
 // Review
 type Review struct {
 	review.R
-	SelectedRevision int
-	URL              string
-	Header           template.HTML
+	CurrentRevision int
+	URL             string
+	Header          template.HTML
 }
 
 // CSS label class will be rendered according to the status

@@ -12,8 +12,10 @@ import (
 
 	"github.com/echlebek/erickson/assets"
 	"github.com/echlebek/erickson/diff"
+	"github.com/echlebek/erickson/mail"
 	"github.com/echlebek/erickson/resource"
 	"github.com/echlebek/erickson/review"
+
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/sessions"
 )
@@ -71,7 +73,7 @@ func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err500, 500)
 		return
 	}
-	username, ok := session.Values["username"]
+	username, ok := session.Values["username"].(string)
 	if !ok {
 		http.Error(w, err500, 500)
 		return
@@ -87,17 +89,18 @@ func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
 	}
 
 	res := resource.Review{
-		R:                review,
-		SelectedRevision: ctx.revision,
-		URL:              ctx.reviewURL(),
+		R:               review,
+		CurrentRevision: ctx.revision,
+		URL:             ctx.reviewURL(),
 	}
 	wrap := struct {
 		resource.Review
-		Stylesheets       map[string]http.Handler
-		Scripts           map[string]http.Handler
-		CSRFField         template.HTML
-		Session           *sessions.Session
-		ReviewOwnedByUser bool
+		Stylesheets            map[string]http.Handler
+		Scripts                map[string]http.Handler
+		CSRFField              template.HTML
+		Session                *sessions.Session
+		ReviewOwnedByUser      bool
+		UnpublishedAnnotations int
 	}{
 		res,
 		assets.StylesheetHandlers,
@@ -105,6 +108,7 @@ func getReview(ctx context, w http.ResponseWriter, req *http.Request) {
 		csrf.TemplateField(req),
 		session,
 		review.Submitter == username,
+		review.Revisions[ctx.revision].UnpublishedAnnotationsFor(username),
 	}
 	if err := assets.Templates["review.html"].Execute(w, wrap); err != nil {
 		log.Println(err)
@@ -202,6 +206,59 @@ func postAnnotation(ctx context, w http.ResponseWriter, req *http.Request) {
 	http.Redirect(w, req, path, http.StatusSeeOther)
 }
 
+func publishAnnotations(ctx context, w http.ResponseWriter, req *http.Request) {
+	session, err := ctx.store.Get(req, SessionName)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err500, 500)
+		return
+	}
+	username, ok := session.Values["username"].(string)
+	if !ok {
+		log.Println("session doesn't contain a valid username")
+		http.Error(w, err500, 500)
+		return
+	}
+
+	review, err := ctx.db.GetReview(ctx.review)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "can't get revision", 500)
+		return
+	}
+	if ctx.revision >= len(review.Revisions) {
+		http.Error(w, "no such revision", 400)
+		return
+	}
+	revision := review.Revisions[ctx.revision]
+	for i, a := range revision.Annotations {
+		if a.User == username {
+			a.Published = true
+			revision.Annotations[i] = a
+		}
+	}
+	if err := ctx.db.UpdateRevision(ctx.review, ctx.revision, revision); err != nil {
+		http.Error(w, "couldn't update revision", 500)
+		log.Println(err)
+		return
+	}
+	go func() {
+		path := "/reviews/" + strconv.Itoa(ctx.review) + "/rev/" + strconv.Itoa(ctx.revision)
+		message := mail.Message{
+			Sender:     session.Values["username"].(string),
+			Recipient:  review.Summary.Submitter,
+			Repository: review.Summary.Repository,
+			ReviewURL:  path,
+		}
+		if err := ctx.mailer.NotifyReviewAnnotated(message); err != nil {
+			log.Println(err)
+		}
+	}()
+	url := ctx.reviewURL()
+	http.Redirect(w, req, url, 303)
+}
+
+// annotate or change the status of a review
 func patchReview(ctx context, w http.ResponseWriter, req *http.Request) {
 	p := struct {
 		Status     *string            `json:"status"`
@@ -318,6 +375,7 @@ func postJSONReview(ctx context, w http.ResponseWriter, req *http.Request) {
 	http.Redirect(w, req, url, 303)
 }
 
+// revise a review
 func postRevision(ctx context, w http.ResponseWriter, req *http.Request) {
 	var r review.Revision
 	if err := json.NewDecoder(req.Body).Decode(&r); err != nil {
@@ -340,6 +398,7 @@ func postRevision(ctx context, w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// annotate a review
 func patchRevision(ctx context, w http.ResponseWriter, req *http.Request) {
 	var anno review.Annotation
 	if err := json.NewDecoder(req.Body).Decode(&anno); err != nil {

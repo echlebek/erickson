@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/echlebek/erickson/db"
+	"github.com/echlebek/erickson/mail"
 	"github.com/echlebek/erickson/review"
 	"github.com/echlebek/erickson/server"
 )
@@ -89,5 +90,5 @@ func newTestServer(t *testing.T) (*httptest.Server, chan bool) {
 		t.Fatal(err)
 	}
 	key := []byte("12345678901234567890123456789012")
-	return httptest.NewServer(server.NewRootHandler(db, tmpd, key)), done
+	return httptest.NewServer(server.NewRootHandler(db, tmpd, key, mail.Nil)), done
 }

@@ -3,10 +3,12 @@ package server
 import (
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/echlebek/erickson/assets"
 	"github.com/echlebek/erickson/db"
+	"github.com/echlebek/erickson/mail"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
@@ -32,6 +34,8 @@ type context struct {
 
 	store *sessions.CookieStore
 
+	mailer mail.Mailer
+
 	// The request lead to auth failure. This is here because
 	// I want to call getLogin after postLogin fails, but I don't
 	// have any way for getLogin to know about the failure.
@@ -40,8 +44,10 @@ type context struct {
 	badAuth bool
 }
 
+type contextHandlerFunc func(context, http.ResponseWriter, *http.Request)
+
 // authHandler checks the user's session before proceeding with the request.
-func (c context) authHandler(f func(context, http.ResponseWriter, *http.Request)) http.HandlerFunc {
+func (c context) authHandler(f contextHandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		if session, err := c.store.Get(req, SessionName); err != nil || session.IsNew {
 			http.Redirect(w, req, "/login", http.StatusSeeOther)
@@ -55,14 +61,22 @@ func (c context) authHandler(f func(context, http.ResponseWriter, *http.Request)
 }
 
 // handler adds context to erickson's handlers.
-func (c context) handler(f func(context, http.ResponseWriter, *http.Request)) http.HandlerFunc {
+func (c context) handler(f contextHandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		f(c, w, req)
 	}
 }
 
 func (c context) reviewURL() (str string) {
-	url, err := c.router.Get("review").URL("id", strconv.Itoa(c.review))
+	var (
+		url *url.URL
+		err error
+	)
+	if c.revision > 0 {
+		url, err = c.router.Get("review").URL("id", strconv.Itoa(c.review), "rev", strconv.Itoa(c.revision))
+	} else {
+		url, err = c.router.Get("review").URL("id", strconv.Itoa(c.review))
+	}
 	if err != nil {
 		log.Println(err)
 	}
@@ -92,11 +106,19 @@ func (c context) revisionURL(id, revision int) (str string) {
 // /reviews/{id}/rev/{revision}/annotations POST
 //
 //
-func NewRootHandler(d db.Database, fsRoot string, sessionKey []byte) *RootHandler {
+func NewRootHandler(d db.Database, fsRoot string, sessionKey []byte, mailer mail.Mailer) *RootHandler {
 	r := mux.NewRouter()
 	handler := &RootHandler{Database: d, Router: r, URL: new(string), FSRoot: fsRoot}
 	store := sessions.NewCookieStore(sessionKey)
-	ctx := context{router: r, db: d, url: handler.URL, fsRoot: fsRoot, store: store}
+
+	ctx := context{
+		router: r,
+		db:     d,
+		url:    handler.URL,
+		fsRoot: fsRoot,
+		store:  store,
+		mailer: mailer,
+	}
 
 	for name, handler := range assets.StylesheetHandlers {
 		r.Handle("/assets/"+name, handler).Methods("GET")
@@ -141,6 +163,9 @@ func NewRootHandler(d db.Database, fsRoot string, sessionKey []byte) *RootHandle
 	r.HandleFunc("/reviews/{id}/rev/{revision}/annotations", ctx.authHandler(postAnnotation)).
 		Methods("POST").
 		Headers("Content-Type", "application/x-www-form-urlencoded")
+
+	r.HandleFunc("/reviews/{id}/rev/{revision}/annotations/publish", ctx.authHandler(publishAnnotations)).
+		Methods("POST")
 
 	r.HandleFunc("/reviews", ctx.authHandler(postJSONReview)).
 		Methods("POST").

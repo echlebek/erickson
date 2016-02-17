@@ -15,6 +15,7 @@ import (
 
 	"github.com/echlebek/erickson/db"
 	"github.com/echlebek/erickson/diff"
+	"github.com/echlebek/erickson/mail"
 	"github.com/echlebek/erickson/review"
 )
 
@@ -148,7 +149,7 @@ func TestServer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	handler := NewRootHandler(db, wd+"./..", []byte("12345678901234567890123456789012"))
+	handler := NewRootHandler(db, wd+"./..", []byte("12345678901234567890123456789012"), mail.Nil)
 
 	server := httptest.NewUnstartedServer(handler)
 	cert, err := tls.LoadX509KeyPair("test.crt", "test.key")

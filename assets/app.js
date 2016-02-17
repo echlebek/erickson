@@ -18,17 +18,15 @@ function toggleShowAll() {
   }
 }
 
-function patchRevision(annotation) {
-  var data = JSON.stringify(annotation);
-  console.log(data);
+function publishAnnotations() {
   $.ajax({
     headers: {
       "Content-Type": "application/json"
     },
-    url: window.location,
+    url: window.location + "/annotations",
     type: "PATCH",
-    data: data,
-    complete: function() {
+    data: "",
+    complete: function () {
       window.location.reload();
     }
   });
