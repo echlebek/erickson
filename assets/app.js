@@ -90,3 +90,17 @@ function showAnnotate(span) {
 function cancelAnnotate() {
   $(".annotate-form").hide();
 }
+
+function keyEvent(event) {
+  // 44.4444 is roughly the amount chrome scrolls with one down-arrow key
+  // press on my macbook pro.
+  var chr = event.char;
+  if (!chr) { // web browsers...
+    chr = event.keyCode == 106 ? "j" : (event.keyCode == 107 ? "k" : null);
+  }
+  if (chr == "j") {
+    window.scrollTo(0, window.scrollY + 44.4444);
+  } else if (chr == "k") {
+    window.scrollTo(0, window.scrollY - 44.4444);
+  }
+}

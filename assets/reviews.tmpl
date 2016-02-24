@@ -10,12 +10,13 @@
 		{{ end }}
 	</head>
 	<body class="bg-base02">
-		<nav class="navbar bg-base02">
-			<div class="sm-col">
+		<nav class="h4 flex bg-base02 navbar">
+			<div class="flex-auto">
 				<div class="menu-control">
 					<input class="hidden" id="show-menu" value="0" name="" type="checkbox"></input>
 					<label for="show-menu" class="h1 ml2 aqua border-round">&#9881;<span class="font-6"> &#9660;</span></label>
 					<a class="btn aqua mt1 mb1 ml1" href="/">Erickson Code Review</a>
+					<a class="btn aqua mb1 mt1 regular" href="/reviews">Reviews</a>
 				</div>
 			</div>
 			<div id="navbar">
@@ -54,16 +55,16 @@
 					</div>
 				</form>
 			</div>
-			<div class="base02 bg-base3 border rounded m1 mt4 mb4 p2">
-				<h2 class="h2">Reviews</h2>
+			<div class="base02 bg-base3 border rounded m1 mt3 mb4 p2">
+				<h2 class="h2 regular">Reviews</h2>
 				<div class="checkbox">
 					<label>
 						<input id="show-all" onClick="toggleShowAll()" type="checkbox" value="false">Show Submitted and Discarded Reviews</input>
 					</label>
 				</div>
 				<p></p>
-				<table class="table-light base02">
-					<thead class="aqua bg-base02">
+				<table class="base02">
+					<thead class="bg-base2">
 						<th class="rounded-left">Review</th>
 						<th>Repository</th>
 						<th>Submitter</th>

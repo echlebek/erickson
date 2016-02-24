@@ -234,9 +234,9 @@ code {
 }
 
 .navbar {
-	-webkit-box-shadow: -5px 5px 5px -2px rgba(0,0,0,0.30);
-	-moz-box-shadow: -5px 5px 5px -2px rgba(0,0,0,0.30);
-	box-shadow: -5px 5px 5px -2px rgba(0,0,0,0.30);
+	-webkit-box-shadow: -5px 5px 5px -2px rgba(0,0,0,0.5);
+	-moz-box-shadow: -5px 5px 5px -2px rgba(0,0,0,0.5);
+	box-shadow: -5px 5px 5px -2px rgba(0,0,0,0.5);
     position: fixed;
     top: 0;
     left: 0;
@@ -247,7 +247,9 @@ code {
 
 .navbar-menu {
     z-index: 999;
-	box-shadow: 5px 5px 5px -2px rgba(0,0,0,0.30);
+	-webkit-box-shadow: -5px 5px 5px -2px rgba(0,0,0,0.5);
+	-moz-box-shadow: -5px 5px 5px -2px rgba(0,0,0,0.5);
+	box-shadow: 5px 5px 5px -2px rgba(0,0,0,0.5);
 	position: fixed;
 	top: 50px;
 	left: 0;
@@ -255,6 +257,8 @@ code {
 
 .annotation {
 	box-shadow: 5px 5px 5px -2px rgba(0,0,0,0.30);
+	-webkit-box-shadow: -5px 5px 5px -2px rgba(0,0,0,0.5);
+	-moz-box-shadow: -5px 5px 5px -2px rgba(0,0,0,0.5);
 	z-index: 997;
 	position: relative;
 }

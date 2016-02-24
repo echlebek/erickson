@@ -11,7 +11,7 @@
 		<script async="async" src="/assets/{{ $k }}"></script>
 		{{ end }}
 	</head>
-	<body class="bg-base02">
+	<body class="bg-base02" onkeypress="keyEvent(event)">
 		<!-- the html in <aside> will be inserted into the diff table via jquery -->
 		<aside class="hidden">
 			<div class="bg-base02 aqua p2 annotate-form">
@@ -30,20 +30,20 @@
 				</form>
 			</div>
 		</aside>
-		<nav class="white bg-base02 navbar">
-			<div class="sm-col">
+		<nav class="h4 flex bg-base02 navbar">
+			<div class="flex-auto">
 				<div class="menu-control">
 					<input class="hidden" id="show-menu" value="0" name="" type="checkbox"></input>
 					<label for="show-menu" class="h1 ml2 aqua border-round">&#9881;<span class="font-6"> &#9660;</span></label>
-					<a class="btn aqua mt1 mb1 ml1" href="/">Erickson Code Review</a>
-					<a class="btn aqua mt1 mb1 regular" href="">Review {{.ID}} ({{.Status}})</a>
+					<a class="btn aqua mb1 mt1 ml1" href="/">Erickson Code Review</a>
+					<a class="btn aqua mb1 mt1 regular" href="/reviews/{{.ID}}">Review {{.ID}} ({{.Status}})</a>
 				</div>
 			</div>
-			<div class="sm-col-right align-middle">
+			<div class="sm-col-right">
 				{{ if .UnpublishedAnnotations }}
 				<span>
 					<form style="float: left;" method="post" action="/reviews/{{.ID}}/rev/{{.CurrentRevision}}/annotations/publish">
-						<button name="status" value="Submitted" class="btn btn-outline mt1 mb1 mr1 btn-submit regular">Post Comments ({{.UnpublishedAnnotations}})</button>
+						<button name="status" value="Submitted" class="btn btn-outline mt1 mb0 mr1 btn-submit regular">Post Comments ({{.UnpublishedAnnotations}})</button>
 						{{ .CSRFField }}
 					</form>
 				</span>
@@ -52,17 +52,17 @@
 				{{ if .StatusOpen }}
 				<span>
 					<form style="float: left;" method="post" action="/reviews/{{.ID}}/status">
-						<button name="status" value="Submitted" class="btn btn-outline mt1 mb1 mr1 btn-submit regular">Submit Review</button>
+						<button name="status" value="Submitted" class="btn btn-outline mt1 mb0 mr1 btn-submit regular">Submit Review</button>
 						{{ .CSRFField }}
 					</form>
 					<form style="float: right;" method="post" action="/reviews/{{.ID}}/status">
-						<button name="status" value="Discarded" class="btn btn-outline mt1 mb1 mr1 btn-discard regular">Discard Review</button>
+						<button name="status" value="Discarded" class="btn btn-outline mt1 mb0 mr1 btn-discard regular">Discard Review</button>
 						{{ .CSRFField }}
 					</form>
 				</span>
 				{{ else }}
 				<form method="post" action="/reviews/{{.ID}}/status">
-					<button name="status" value="Open" class="btn btn-outline mt1 mb1 mr1 btn-reopen regular">Re-open Review</button>
+					<button name="status" value="Open" class="btn btn-outline mt1 mb0 mr1 btn-reopen regular">Re-open Review</button>
 					{{ .CSRFField }}
 				</form>
 				{{ end }}
@@ -80,7 +80,7 @@
 		</div>
 		<div class="mt4 h6 col-6 bold rounded m1 p2 bg-base2">
 			<h3 class="h3 base01 mt0">Commit Log</h3>
-			<pre class="border p1 bg-base3 border-thin regular h6">{{ .R.CommitMsg }}</pre>
+			<pre class="border p1 bg-base3 border-thin regular h5">{{ .R.CommitMsg }}</pre>
 		</div>
 		<div class="code-tables">
 			{{ range $r, $rev := .R.Revisions }}
@@ -113,11 +113,11 @@
 				<div class="flex annotation mb0">
 					<span class="flex-auto">
 						<div class="bg-base2 px1 pt1 border">
-							<p class="bold h4 regular mt1">{{ $f.NewName }}:{{ (index $hunk.RHS $k).Line }}</p>
+							<p class="h4 underline regular mt0 mb0">{{ $f.NewName }}:{{ (index $hunk.RHS $k).Line }}</p>
 							{{ range $a, $annotation := ($revision.GetAnnotations $i $j $k $username) }}
-							<p class="m1">{{ $annotation.User }} says:</p>
-							<div class="bg-base3 p1 mb1 border rounded">
-								<pre class="code-pre h6"><code> {{ $annotation.Comment }}</code></pre>
+							<p class="h5 mb0 ml1">{{ $annotation.User }} says:</p>
+							<div class="bg-base3 px2 py1 mt0 ml2 mr2 mb2 rounded">
+								<pre class="code-pre h5"><code>{{ $annotation.Comment }}</code></pre>
 								<br>
 							</div>
 							{{ end }}
