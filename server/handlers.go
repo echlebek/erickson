@@ -258,14 +258,13 @@ func publishAnnotations(ctx context, w http.ResponseWriter, req *http.Request) {
 		ReviewURL:   *ctx.url + path,
 		Annotations: annotations,
 	}
-	mail.WriteMessage(w, message, assets.Templates["mail_comments.html"])
-	//go func() {
-	//	if err := ctx.mailer.NotifyReviewAnnotated(message); err != nil {
-	//		log.Println(err)
-	//	}
-	//}()
-	//url := ctx.reviewURL()
-	//http.Redirect(w, req, url, 303)
+	go func() {
+		if err := ctx.mailer.NotifyReviewAnnotated(message); err != nil {
+			log.Println(err)
+		}
+	}()
+	url := ctx.reviewURL()
+	http.Redirect(w, req, url, 303)
 }
 
 // annotate or change the status of a review
