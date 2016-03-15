@@ -106,9 +106,9 @@ func (c context) revisionURL(id, revision int) (str string) {
 // /reviews/{id}/rev/{revision}/annotations POST
 //
 //
-func NewRootHandler(d db.Database, fsRoot string, sessionKey []byte, mailer mail.Mailer) *RootHandler {
+func NewRootHandler(d db.Database, fsRoot string, sessionKey []byte, mailer mail.Mailer, urlRoot string) *RootHandler {
 	r := mux.NewRouter()
-	handler := &RootHandler{Database: d, Router: r, URL: new(string), FSRoot: fsRoot}
+	handler := &RootHandler{Database: d, Router: r, URL: &urlRoot, FSRoot: fsRoot}
 	store := sessions.NewCookieStore(sessionKey)
 
 	ctx := context{

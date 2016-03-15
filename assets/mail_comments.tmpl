@@ -1,0 +1,90 @@
+<html>
+<body>
+<style type="text/css">
+
+	textarea{
+		background-color: #eee8d5;
+		padding: 5px;
+		padding-left: 50px;
+		border: none;
+		width: 100%;
+		height: auto;
+	}
+	.bg-red {
+		background-color: #fbb3ad;
+	}
+	.bg-green {
+		background-color: #ccebc5;
+	}
+	.aqua {
+		color: #7fdbff;
+	}
+	.bg-base02{
+		background-color: #073642;
+	}
+	.bg-base2{
+		background-color: #eee8d5;
+	}
+	.sans{
+		font-family: sans-serif;
+	}
+	.normal{
+		font-weight: normal;
+	}
+	.courier{
+		font-family: courier;
+	}
+	.italic{
+		font-style: italic;
+	}
+	.pt{
+		padding-top: 25px;
+	}
+	.pl {
+		padding-left: 25px;
+	}
+	.bold{
+		font-weight: bold;
+	}
+</style>
+<table class="sans bg-base2" style="padding: none; width: 100%;">
+	<tr class="sans">
+		<td class="bg-base02 aqua">
+			<h3 class="pl pt">
+				Erickson Code Review
+			</h3>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<h3 class="normal pl pt">
+				Hi {{ .Recipient }},
+			</h3>
+			<h3 class="normal pl">
+				{{ .Sender }} reviewed <a href="{{.ReviewURL}}">your work</a>, and made some comments about it.
+			</h3>
+			{{ range $a := .Annotations }}
+			<h4 class="pl bold">
+				{{.File}}: {{.LineNumber}}: 
+			</h4>
+			<table width="95%" style="margin-left: 50px;">
+				<tr class="courier normal">
+					{{ if .LHS }}
+					<td class="bg-red">
+						{{.LHS}}
+					</td>
+					{{ end }}
+					<td class="bg-green">
+						{{ .RHS }}
+					</td>
+				</tr>
+			</table>
+			<textarea rows={{.CommentLines}} readonly class="courier normal italic">
+{{ .Comment }}
+			</textarea>
+		{{ end }}
+		</td>
+	</tr>
+</table>
+</body>
+</html>

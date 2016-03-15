@@ -220,20 +220,28 @@ func publishAnnotations(ctx context, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	review, err := ctx.db.GetReview(ctx.review)
+	rev, err := ctx.db.GetReview(ctx.review)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "can't get revision", 500)
 		return
 	}
-	if ctx.revision >= len(review.Revisions) {
+	if ctx.revision >= len(rev.Revisions) {
 		http.Error(w, "no such revision", 400)
 		return
 	}
-	revision := review.Revisions[ctx.revision]
+	annotations := []mail.Annotation{}
+	revision := rev.Revisions[ctx.revision]
 	for i, a := range revision.Annotations {
-		if a.User == username {
+		if a.User == username && !a.Published {
 			a.Published = true
+			annotations = append(annotations, mail.Annotation{
+				File:       revision.Files[a.File].NewName,
+				LineNumber: a.Line,
+				LHS:        revision.Files[a.File].Hunks[a.Hunk].LHS[a.Line].Text,
+				RHS:        revision.Files[a.File].Hunks[a.Hunk].RHS[a.Line].Text,
+				Comment:    a.Comment,
+			})
 			revision.Annotations[i] = a
 		}
 	}
@@ -242,20 +250,22 @@ func publishAnnotations(ctx context, w http.ResponseWriter, req *http.Request) {
 		log.Println(err)
 		return
 	}
-	go func() {
-		path := "/reviews/" + strconv.Itoa(ctx.review) + "/rev/" + strconv.Itoa(ctx.revision)
-		message := mail.Message{
-			Sender:     session.Values["username"].(string),
-			Recipient:  review.Summary.Submitter,
-			Repository: review.Summary.Repository,
-			ReviewURL:  path,
-		}
-		if err := ctx.mailer.NotifyReviewAnnotated(message); err != nil {
-			log.Println(err)
-		}
-	}()
-	url := ctx.reviewURL()
-	http.Redirect(w, req, url, 303)
+	path := "/reviews/" + strconv.Itoa(ctx.review) + "/rev/" + strconv.Itoa(ctx.revision)
+	message := mail.Message{
+		Sender:      session.Values["username"].(string),
+		Recipient:   rev.Summary.Submitter,
+		Repository:  rev.Summary.Repository,
+		ReviewURL:   *ctx.url + path,
+		Annotations: annotations,
+	}
+	mail.WriteMessage(w, message, assets.Templates["mail_comments.html"])
+	//go func() {
+	//	if err := ctx.mailer.NotifyReviewAnnotated(message); err != nil {
+	//		log.Println(err)
+	//	}
+	//}()
+	//url := ctx.reviewURL()
+	//http.Redirect(w, req, url, 303)
 }
 
 // annotate or change the status of a review

@@ -149,7 +149,7 @@ func TestServer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	handler := NewRootHandler(db, wd+"./..", []byte("12345678901234567890123456789012"), mail.Nil)
+	handler := NewRootHandler(db, wd+"./..", []byte("12345678901234567890123456789012"), mail.Nil, "")
 
 	server := httptest.NewUnstartedServer(handler)
 	cert, err := tls.LoadX509KeyPair("test.crt", "test.key")

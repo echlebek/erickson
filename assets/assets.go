@@ -11,6 +11,7 @@ import "net/http"
 //go:generate asset basscss.css
 //go:generate asset app.js
 //go:generate asset jquery.js
+//go:generate asset mail_comments.tmpl
 
 var (
 	ScriptHandlers = map[string]http.Handler{
@@ -22,10 +23,11 @@ var (
 		"basscss.css": basscss,
 	}
 	Templates = map[string]Template{
-		"review.html":  review,
-		"reviews.html": reviews,
-		"signup.html":  signup,
-		"login.html":   login,
+		"review.html":        review,
+		"reviews.html":       reviews,
+		"signup.html":        signup,
+		"login.html":         login,
+		"mail_comments.html": mail_comments,
 	}
 )
 
